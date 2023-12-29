@@ -1,0 +1,6 @@
+molot>=0.8.0,<0.9.0
+numpy
+pandas
+sqlalchemy>=2.0.0,<2.1.0
+psycopg2-binary
+streamlit
