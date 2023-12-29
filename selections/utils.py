@@ -7,19 +7,22 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 import streamlit as st
 
-from config import Database
+from config import Config
 
 
-config = Database(
-    db_host=os.getenv(
-        "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"
+config = Config(
+    app=Config.App(database_lock=False),
+    database=Config.Database(
+        db_host=os.getenv(
+            "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"
+        ),
+        db_name=os.getenv("DB_NAME", "hockey_services"),
+        db_password=os.getenv("DB_PASSWORD", ""),
+        db_user=os.getenv("DB_USER", "ahovington"),
     ),
-    db_name=os.getenv("DB_NAME", "hockey_services"),
-    db_password=os.getenv("DB_PASSWORD", ""),
-    db_user=os.getenv("DB_USER", "ahovington"),
 )
 
-engine = create_engine(config.db_url())
+engine = create_engine(config.database.db_url())
 
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
@@ -36,6 +39,12 @@ def read_data(sql_statement: str) -> pd.DataFrame:
 
 
 def create_data(table: str, columns: tuple[str], values: tuple[Any]):
+    # TODO: Add user to the change
+    if config.app.database_lock:
+        st.error(
+            "A hard lock has been applied to the databases. Contact the administrator."
+        )
+        return
     try:
         with engine.connect() as session:
             # Update a record
@@ -49,13 +58,24 @@ def create_data(table: str, columns: tuple[str], values: tuple[Any]):
         session.close()
 
 
-def update_data(table: str, column: str, id: str, value: Any):
+def update_data(
+    table: str, column: str, id: str, value: Any, value_string_type: bool = False
+):
     # TODO: Add user to the change
+    if config.app.database_lock:
+        st.error(
+            "A hard lock has been applied to the databases. Contact the administrator."
+        )
+        return
     try:
+        sql = f"""UPDATE { table } SET { column } = { value } WHERE id = '{ id }'"""
+        if value_string_type:
+            sql = (
+                f"""UPDATE { table } SET { column } = '{ value }' WHERE id = '{ id }'"""
+            )
+        st.write(sql)
         with engine.connect() as session:
             # Update a record
-            sql = f"""UPDATE { table } SET { column } = { value } WHERE id = '{ id }'"""
-            st.write(sql)
             session.execute(text(sql))
             # Commit changes
             session.commit()

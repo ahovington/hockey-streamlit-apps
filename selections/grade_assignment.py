@@ -72,6 +72,9 @@ def team_data(season: str):
         from teams
         where
             season = '{ season }'
+        order by
+            team_order,
+            grade
     """
     )
 
@@ -98,8 +101,16 @@ def update_team_data(df: pd.DataFrame, lock: bool = True):
         st.error("Database is locked, contact the administrator.")
         return
     for _, row in df.iterrows():
-        update_data("teams", "manager", row["team_id"], row["manager"])
-        update_data("teams", "manager_mobile", row["team_id"], row["manager_mobile"])
+        update_data(
+            "teams", "manager", row["team_id"], row["manager"], value_string_type=True
+        )
+        update_data(
+            "teams",
+            "manager_mobile",
+            row["team_id"],
+            row["manager_mobile"],
+            value_string_type=True,
+        )
         update_data("teams", "team_order", row["team_id"], row["team_order"])
 
 

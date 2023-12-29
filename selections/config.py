@@ -4,16 +4,20 @@ from urllib.parse import quote_plus
 
 
 @dataclass
-class App:
-    database_lock: bool = True
+class Config:
+    app: App
+    database: Database
 
+    @dataclass
+    class App:
+        database_lock: bool = True
 
-@dataclass
-class Database:
-    db_host: str
-    db_name: str
-    db_password: str
-    db_user: str
+    @dataclass
+    class Database:
+        db_host: str
+        db_name: str
+        db_password: str
+        db_user: str
 
-    def db_url(self) -> str:
-        return f"postgresql://{ self.db_user }:{ quote_plus(self.db_password) }@{ self.db_host}/{ self.db_name }"
+        def db_url(self) -> str:
+            return f"postgresql://{ self.db_user }:{ quote_plus(self.db_password) }@{ self.db_host}/{ self.db_name }"
