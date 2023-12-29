@@ -4,23 +4,22 @@ import random
 from typing import Any, Dict
 import datetime as dt
 import pandas as pd
-from urllib.parse import quote_plus
 from sqlalchemy import create_engine, text
 import streamlit as st
 
-DB_HOST = os.getenv(
-    "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"
+from config import Database
+
+
+config = Database(
+    db_host=os.getenv(
+        "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"
+    ),
+    db_name=os.getenv("DB_NAME", "hockey_services"),
+    db_password=os.getenv("DB_PASSWORD", ""),
+    db_user=os.getenv("DB_USER", "ahovington"),
 )
-DB_NAME = os.getenv("DB_NAME", "hockey_services")
-DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD", ""))
-DB_USER = "ahovington"
-DB_URL = "postgresql://%s:%s@%s/%s" % (
-    DB_USER,
-    quote_plus(DB_PASSWORD),
-    DB_HOST,
-    DB_NAME,
-)
-engine = create_engine(DB_URL)
+
+engine = create_engine(config.db_url())
 
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
@@ -55,7 +54,6 @@ def update_data(table: str, column: str, id: str, value: Any):
     try:
         with engine.connect() as session:
             # Update a record
-            # sql = f"""UPDATE { table } SET { column } = %s, update_ts = '{ add_timestamp() }' WHERE id = %s"""
             sql = f"""UPDATE { table } SET { column } = { value } WHERE id = '{ id }'"""
             st.write(sql)
             session.execute(text(sql))
