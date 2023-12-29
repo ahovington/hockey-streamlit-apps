@@ -280,7 +280,7 @@ def input_player_results(df: pd.DataFrame):
     game_id = df["game_id"]
     selection_id = df["selection_id"]
     create_result = df["create_result"]
-    _df = df.drop(columns=["selection_id", "create_result"])
+    _df = df.drop(columns=["player_id", "game_id", "selection_id", "create_result"])
     with st.form("Player results"):
         result = st.data_editor(
             _df,
