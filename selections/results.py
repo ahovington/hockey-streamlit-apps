@@ -41,6 +41,7 @@ def Results(database_lock: bool, season: str):
     game_changes = compare_dataframes(game_result, updated_game_results, "game_id")
     if game_changes.shape[0]:
         update_game_results(game_changes, database_lock)
+        game_result = game_data(season, date_filter)
 
     ### Filters for player data ###
     col1, col2, _, _ = st.columns(4)
@@ -82,6 +83,9 @@ def Results(database_lock: bool, season: str):
     creates = changes[changes["create_result"] == True]
     st.write("Create data", creates)
     create_player_results(creates, lock=database_lock)
+
+    # refresh data
+    player_result = player_data(season, round, team)
 
 
 def game_data(
@@ -225,6 +229,8 @@ def player_data(season: str, round: str, team: str):
         _played_games as (
             select
                 coalesce(s.selection_id, g.game_id || g.player_id) as selection_id,
+                g.game_id,
+                g.player_id,
                 case
                     when r.id is null then true
                     else false
@@ -270,6 +276,8 @@ def player_data(season: str, round: str, team: str):
 
 
 def input_player_results(df: pd.DataFrame):
+    player_id = df["player_id"]
+    game_id = df["game_id"]
     selection_id = df["selection_id"]
     create_result = df["create_result"]
     _df = df.drop(columns=["selection_id", "create_result"])
@@ -317,6 +325,8 @@ def input_player_results(df: pd.DataFrame):
             use_container_width=True,
             hide_index=True,
         )
+        result.loc[:, "player_id"] = player_id
+        result.loc[:, "game_id"] = game_id
         result.loc[:, "selection_id"] = selection_id
         result.loc[:, "create_result"] = create_result
         result.loc[
@@ -356,6 +366,29 @@ def create_player_results(df: pd.DataFrame, lock: bool = True) -> None:
         st.error("Database is locked, contact the administrator.")
         return
     for _, row in df.iterrows():
+        create_data(
+            "selections",
+            (
+                "id",
+                "create_ts",
+                "update_ts",
+                "game_id",
+                "player_id",
+                "goal_keeper",
+                "selected",
+                "played",
+            ),
+            (
+                row["selection_id"],
+                str(add_timestamp()),
+                str(add_timestamp()),
+                row["game_id"],
+                row["player_id"],
+                row["goal_keeper"],
+                row["selected"],
+                row["played"],
+            ),
+        )
         create_data(
             "results",
             (

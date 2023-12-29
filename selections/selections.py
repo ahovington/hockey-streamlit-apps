@@ -103,6 +103,10 @@ def Selections(database_lock: bool, season: str):
     st.write("Create data", creates)
     create_selection(creates, lock=database_lock)
 
+    # refresh data
+    game = game_data(season, date_filter)
+    selections = selections_input_data(season, round, team)
+
 
 def selections_output_data(
     season: str, date_end: dt.datetime, date_inteval: int = 6

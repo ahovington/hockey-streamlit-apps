@@ -32,15 +32,11 @@ def GradeAssignment(database_lock: bool, season: str):
     updated_player = input_player_team_table(player, team["full_team_name"].unique())
     player_changes = compare_dataframes(player, updated_player, "registration_id")
 
-    # Refresh data after making changes
-    if st.button("refresh page"):
-        team = team_data(season)
-        player = player_data(season)
-
     # update team rows
     if team_changes.shape[0]:
         st.write("Update team data", team_changes)
         update_team_data(team_changes, lock=database_lock)
+        team = team_data(season)
 
     if player_changes.shape[0]:
         st.write("Update player data", player_changes)
@@ -56,6 +52,7 @@ def GradeAssignment(database_lock: bool, season: str):
             .replace("", np.nan),
             lock=database_lock,
         )
+        player = player_data(season)
 
 
 def team_data(season: str):
