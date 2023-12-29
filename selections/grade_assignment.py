@@ -7,12 +7,7 @@ from utils import compare_dataframes, read_data, update_data
 
 def GradeAssignment(database_lock: bool, season: str):
     st.title("Assign players a team and grade")
-    st.subheader(
-        "Team assignments are only to help with selections and can be changed at any time.",
-        divider="green",
-    )
-
-    st.subheader("Allocate players to one of the following teams.")
+    st.subheader("Allocate players to one of the following teams.", divider="green")
 
     team = team_data(season)
     if not team.shape[0]:

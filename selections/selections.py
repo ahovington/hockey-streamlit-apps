@@ -15,7 +15,7 @@ from utils import (
 
 def Selections(database_lock: bool, season: str):
     st.title("Selections")
-    st.subheader("Select players to play", divider="green")
+    st.subheader("Select players to play each game.", divider="green")
 
     # Date end filter
     max_date = read_data(
@@ -43,7 +43,7 @@ def Selections(database_lock: bool, season: str):
     with st.expander(f"Preview selections", expanded=False):
         col1, _, _ = st.columns(3)
         if col1.button(f"Generate selections", use_container_width=True):
-            pass
+            st.error("Generate selections has not been implemented.")
 
         selected = selections_output_data(season, date_filter)
         if selected.shape[0]:
