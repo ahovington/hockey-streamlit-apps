@@ -29,3 +29,4 @@ check-python:
 
 run-streamlit-app:
 	($(ACTIVATE_VENV) && streamlit run $(APP)/app.py)
+.PHONY: run-streamlit-app
