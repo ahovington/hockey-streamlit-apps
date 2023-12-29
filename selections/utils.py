@@ -11,7 +11,7 @@ from config import Config
 
 
 config = Config(
-    app=Config.App(database_lock=False),
+    app=Config.App(database_lock=True),
     database=Config.Database(
         db_host=os.getenv(
             "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"
