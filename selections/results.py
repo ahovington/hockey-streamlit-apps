@@ -12,11 +12,20 @@ def Results(database_lock: bool, season: str):
     st.subheader("- Add the results, and cards given", divider="green")
 
     # Date end filter
+    max_date = read_data(
+        f"""
+        select max(start_ts) as max_ts
+        from games
+        where
+            season = '{ season }'
+            and start_ts < '{ dt.datetime.now() }'
+        """
+    ).iloc[0, 0]
     col1, _, _ = st.columns(3)
     date_filter = col1.date_input(
         "Games for Week Ending",
         format="DD/MM/YYYY",
-        value=dt.date(year=int(season), month=12, day=4),
+        value=max_date,
         min_value=dt.date(year=int(season), month=1, day=1),
         max_value=dt.date(year=int(season), month=12, day=31),
     )
@@ -94,9 +103,9 @@ def game_data(
         on g.team_id = t.id
         where
             g.season = '{ season }'
-            --TODO: fix the date filter for Postgres
-            --and substr(replace(g.start_ts, '-', ''),1,8)
-            --    between '{ date_start.strftime("%Y%m%d") }' and '{ date_end.strftime("%Y%m%d") }'
+            and g.start_ts between '{ date_start }' and '{ date_end }'
+        order by
+            t.team_order
         """
     ).replace("", None)
     ### Format the game start time ###
@@ -223,9 +232,9 @@ def player_data(season: str, round: str, team: str):
                 g.opposition,
                 g.players_name,
                 g.players_grade,
-                s.selected,
-                s.goal_keeper,
-                s.played,
+                coalesce(s.selected, False) as selected,
+                coalesce(s.goal_keeper, False) as goal_keeper,
+                coalesce(s.played, False) as played,
                 coalesce(r.goals, 0) as goals,
                 coalesce(r.green_card, 0)  as green_card,
                 coalesce(r.yellow_card, 0)  as yellow_card,
@@ -242,14 +251,11 @@ def player_data(season: str, round: str, team: str):
         select *
         from _played_games
         order by
-            goal_keeper desc,
             selected desc,
+            goal_keeper desc,
             players_grade desc
         """
     )
-    df.loc[:, "selected"] = df.loc[:, "selected"].replace(np.nan, 0)
-    df.loc[:, "goal_keeper"] = df.loc[:, "goal_keeper"].replace(np.nan, 0)
-    df.loc[:, "played"] = df.loc[:, "played"].replace(np.nan, 0)
     return df.astype(
         {
             "selected": bool,

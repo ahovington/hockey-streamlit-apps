@@ -18,11 +18,20 @@ def Selections(database_lock: bool, season: str):
     st.subheader("Select players to play", divider="green")
 
     # Date end filter
+    max_date = read_data(
+        f"""
+        select max(start_ts) as max_ts
+        from games
+        where
+            season = '{ season }'
+            and start_ts < '{ dt.datetime.now() }'
+        """
+    ).iloc[0, 0]
     col1, _, _ = st.columns(3)
     date_filter = col1.date_input(
         "Games for Week Ending",
         format="DD/MM/YYYY",
-        value=dt.date(year=int(season), month=12, day=4),
+        value=max_date,
         min_value=dt.date(year=int(season), month=1, day=1),
         max_value=dt.date(year=int(season), month=12, day=31),
     )

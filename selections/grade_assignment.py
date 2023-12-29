@@ -167,6 +167,24 @@ def update_default_team(df: pd.DataFrame, lock: bool = True):
         st.error("Database is locked, contact the administrator.")
         return
     for _, row in df.iterrows():
-        update_data("registrations", "team_id", row["registration_id"], row["team_id"])
-        update_data("registrations", "team", row["registration_id"], row["team"])
-        update_data("registrations", "grade", row["registration_id"], row["grade"])
+        update_data(
+            "registrations",
+            "team_id",
+            row["registration_id"],
+            row["team_id"],
+            value_string_type=True,
+        )
+        update_data(
+            "registrations",
+            "team",
+            row["registration_id"],
+            row["team"],
+            value_string_type=True,
+        )
+        update_data(
+            "registrations",
+            "grade",
+            row["registration_id"],
+            row["grade"],
+            value_string_type=True,
+        )
