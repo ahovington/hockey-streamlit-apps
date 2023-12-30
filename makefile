@@ -21,12 +21,6 @@ requirements-test: requirements
 	( $(ACTIVATE_VENV) && pip3 install -r requirements-test.txt )
 
 
-## Python lint and formatting checks
-check-python:
-	( $(ACTIVATE_VENV) && black --check entrypoint && pylint entrypoint )
-.PHONY: check-python
-
-
-run-streamlit-app:
+run-app:
 	($(ACTIVATE_VENV) && streamlit run $(APP)/app.py)
-.PHONY: run-streamlit-app
+.PHONY: run-app
