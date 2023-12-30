@@ -29,7 +29,7 @@ def login() -> bool:
     Returns:
         bool: The result of the login attempt, True if successful.
     """
-    authenticator.login("Login", "main")
+    _ = authenticator.login("Login", "main")
     if st.session_state["authentication_status"]:
         col1, _ = st.columns([1, 5])
         authenticator.logout("Logout", "main", key="unique_key")
