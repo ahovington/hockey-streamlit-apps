@@ -40,6 +40,7 @@ def _reset_password(authenticator: stauth.Authenticate):
 
 
 def register_user():
+    authenticator = _authenticator()
     try:
         if authenticator.register_user("Create user", preauthorization=False):
             st.success("User registered successfully")
