@@ -30,6 +30,8 @@ if __name__ == "__main__":
         app_name = tuple(apps.keys())[0]
         app_name = col2.selectbox("Select page", tuple(apps.keys()))
         apps[app_name](database_lock, season)
-    else:
-        with st.expander("Create login"):
-            register_user()
+
+    # implement with db
+    # else:
+    #     with st.expander("Create login"):
+    #         register_user()

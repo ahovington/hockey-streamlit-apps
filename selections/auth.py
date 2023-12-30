@@ -8,8 +8,19 @@ with open("selections/config.yaml") as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 authenticator = stauth.Authenticate(
-    config["credentials"], config["cookie"]["name"], config["cookie"]["key"]
+    credentials=config["credentials"],
+    cookie_name=config["cookie"]["name"],
+    key=config["cookie"]["key"],
+    cookie_expiry_days=config["cookie"]["expiry_days"],
 )
+
+# TODO: write validator with the following methods
+# if not self.validator.validate_username(username):
+#     raise RegisterError('Username is not valid')
+# if not self.validator.validate_name(name):
+#     raise RegisterError('Name is not valid')
+# if not self.validator.validate_email(email):
+#     raise RegisterError('Email is not valid')
 
 
 def login() -> bool:
@@ -37,6 +48,7 @@ def _reset_password():
     try:
         if authenticator.reset_password(st.session_state["username"], "Reset password"):
             st.success("Password modified successfully")
+            update_config()
     except Exception as e:
         st.error(e)
 
@@ -45,5 +57,11 @@ def register_user():
     try:
         if authenticator.register_user("Create user", preauthorization=False):
             st.success("User registered successfully")
+            update_config()
     except Exception as e:
         st.error(e)
+
+
+def update_config():
+    with open("selections/config.yaml", "w") as file:
+        yaml.dump(config, file, default_flow_style=False)
