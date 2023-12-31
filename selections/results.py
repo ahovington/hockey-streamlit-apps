@@ -72,7 +72,7 @@ def Results(database_lock: bool, season: str) -> None:
 
     st.subheader(
         f"""
-            Record player results for round { team_round }, 
+            Record player results for round { team_round }\n
             { team } vs { player_result["opposition"].loc[0] }
         """
     )
@@ -85,7 +85,7 @@ def Results(database_lock: bool, season: str) -> None:
         return
 
     # update rows
-    result_updates = changes[not changes["create_result"]]
+    result_updates = changes[changes["create_result"] == False]
     st.write("Update data", result_updates)
     update_player_results(
         result_updates,
@@ -93,7 +93,7 @@ def Results(database_lock: bool, season: str) -> None:
     )
 
     # create rows
-    creates = changes[bool(changes["create_result"])]
+    creates = changes[changes["create_result"] == True]
     st.write("Create data", creates)
     create_player_results(creates, lock=database_lock)
 

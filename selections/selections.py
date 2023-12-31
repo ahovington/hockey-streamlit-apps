@@ -44,9 +44,7 @@ def Selections(database_lock: bool, season: str) -> None:
         max_value=dt.date(year=int(season), month=12, day=31),
     )
 
-    start_date_ui, end_date_ui = calculate_date_interval(
-        date_filter, date_filter == False
-    )
+    start_date_ui, end_date_ui = calculate_date_interval(date_filter, date_filter=False)
     st.write(f"""Games between { start_date_ui } and { end_date_ui } """)
 
     ### Generate selections table ###
@@ -74,6 +72,7 @@ def Selections(database_lock: bool, season: str) -> None:
     ### load game data and show games on this week ###
     game = game_data(season, date_filter)
     if not game.shape[0]:
+        st.error(f"No game found for week ending { end_date_ui }")
         return
 
     st.dataframe(
@@ -94,6 +93,12 @@ def Selections(database_lock: bool, season: str) -> None:
     ### Load player data and show the selections table ###
     selections = selections_input_data(season, team_round, team)
     if not selections.shape[0]:
+        st.error(
+            """
+            No games to select players for.
+            If there are games on this round contact the administrator.
+            """
+        )
         return
 
     # return updated table and identify changes
@@ -104,12 +109,12 @@ def Selections(database_lock: bool, season: str) -> None:
         return
 
     # update rows
-    updates = changes[not changes["create_selection"]]
+    updates = changes[changes["create_selection"] == False]
     st.write("Update data", updates)
     update_selection(updates, lock=database_lock)
 
     # create rows
-    creates = changes[bool(changes["create_selection"])]
+    creates = changes[changes["create_selection"] == True]
     st.write("Create data", creates)
     create_selection(creates, lock=database_lock)
 
@@ -221,7 +226,7 @@ def output_selections_table(
 
     ### Split the df into goalies and field players ###
     # Goalies
-    _selected_keeper = df[bool(df["goal_keeper"])].sort_values("team_order")
+    _selected_keeper = df[df["goal_keeper"] == True].sort_values("team_order")
     _selected_keeper.loc[:, "id"] = (
         _selected_keeper["team_name"] + _selected_keeper["round"]
     )
@@ -241,7 +246,7 @@ def output_selections_table(
             )
     selected_keeper.loc[:, "selection_no"] = "GK"
     # Field player
-    selected_player = df[not df["goal_keeper"]].sort_values("team_order")
+    selected_player = df[df["goal_keeper"] == False].sort_values("team_order")
     selected_player.loc[:, "selection_no"] = (
         selected_player.sort_values(
             ["goal_keeper", "players_name"], ascending=[False, True]
@@ -336,11 +341,12 @@ def game_data(season: str, date_end: dt.datetime, date_inteval: int = 6):
         where
             g.season = '{ season }'
             and g.start_ts between '{ date_start }' and '{ date_end }'
+        order by
+            t.team_order
         """
     ).replace("", None)
     ### game validation ###
     if not df.shape[0]:
-        st.error(f"No game found for week ending { date_end }")
         return pd.DataFrame()
     df.loc[:, "game_time"] = pd.to_datetime(df.loc[:, "start_ts"]).dt.strftime(
         "%a %d %B, %-I:%M %p"
@@ -424,12 +430,6 @@ def selections_input_data(season: str, team_round: str, team: str):
         """
     )
     if not df.shape[0]:
-        st.error(
-            """
-            No games to selected player for.
-            If there are games on this round contact the administrator.
-            """
-        )
         return pd.DataFrame()
     return df
 
@@ -495,7 +495,7 @@ def input_selections_table(
             hide_index=True,
         )
         # Force selected to be true if goal_keeper is true
-        result.loc[bool(result["goal_keeper"]), "selected"] = True
+        result.loc[result["goal_keeper"] == True, "selected"] = True
         # add id columns back
         result.loc[:, "selection_id"] = selection_id
         result.loc[:, "game_id"] = game_id

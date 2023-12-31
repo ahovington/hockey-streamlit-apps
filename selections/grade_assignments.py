@@ -26,6 +26,13 @@ def GradeAssignments(database_lock: bool, season: str) -> None:
     _team = team.drop(columns=["full_team_name"])
     updated_team = input_team_table(_team)
     team_changes = compare_dataframes(_team, updated_team, "team_id")
+    # update team rows
+    if team_changes.shape[0]:
+        st.write("Update team data", team_changes)
+        # update the database
+        update_team_data(team_changes, lock=database_lock)
+        # refresh the data
+        team = team_data(season)
 
     player = player_data(season)
     if not player.shape[0]:
@@ -35,15 +42,9 @@ def GradeAssignments(database_lock: bool, season: str) -> None:
     updated_player = input_player_team_table(player, team["full_team_name"].unique())
     player_changes = compare_dataframes(player, updated_player, "registration_id")
 
-    # update team rows
-    if team_changes.shape[0]:
-        st.write("Update team data", team_changes)
-        update_team_data(team_changes, lock=database_lock)
-        team = team_data(season)
-
     if player_changes.shape[0]:
         st.write("Update player data", player_changes)
-
+        # update the database
         update_default_team(
             player_changes.merge(
                 team[["team_id", "full_team_name"]],
@@ -55,6 +56,7 @@ def GradeAssignments(database_lock: bool, season: str) -> None:
             .replace("", np.nan),
             lock=database_lock,
         )
+        # refresh the data
         player = player_data(season)
 
 
@@ -194,7 +196,7 @@ def input_player_team_table(df: pd.DataFrame, team_names: list[str]) -> pd.DataF
             use_container_width=True,
         )
         result.loc[:, "registration_id"] = registration_id
-        result.loc[result["grade"].isna(), "grade"] = (
+        result.loc[(result["grade"].isna()) | (result["grade"] == ""), "grade"] = (
             result["team"].str.split("-").str[-1]
         )
         commit_changes = st.form_submit_button("Submit")
