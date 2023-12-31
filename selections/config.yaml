@@ -8,6 +8,4 @@ cookie:
   expiry_days: 30
   key: trcyvgubhinjmkl
   name: selections_streamlit_cookie
-preauthorized:
-  emails:
-  - example@example.com
+preauthorized: null

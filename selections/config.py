@@ -20,4 +20,9 @@ class Config:
         db_user: str
 
         def db_url(self) -> str:
-            return f"postgresql://{ self.db_user }:{ quote_plus(self.db_password) }@{ self.db_host}/{ self.db_name }"
+            """Generate the url of the database.
+
+            Returns:
+                str: The database url.
+            """
+            return f"""postgresql://{ self.db_user }:{ quote_plus(self.db_password) }@{ self.db_host}/{ self.db_name }"""

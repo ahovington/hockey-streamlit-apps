@@ -11,9 +11,16 @@ venv:
 		&& $(ACTIVATE_VENV) \
 		&& pip3 install --upgrade pip )
 
+
 ## Install Python requirements for running
 requirements:
 	( $(ACTIVATE_VENV) && pip3 install -r requirements.txt )
+
+
+## Python lint and formatting checks
+check-python:
+	( $(ACTIVATE_VENV) && black --check $(APP) && pylint $(APP) )
+.PHONY: check-python
 
 
 ## Install Python requirements for running and testing
@@ -21,6 +28,6 @@ requirements-test: requirements
 	( $(ACTIVATE_VENV) && pip3 install -r requirements-test.txt )
 
 
-run-app:
+run-local:
 	($(ACTIVATE_VENV) && streamlit run $(APP)/app.py)
 .PHONY: run-app

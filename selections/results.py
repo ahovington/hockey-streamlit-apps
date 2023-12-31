@@ -1,12 +1,19 @@
 import datetime as dt
 import streamlit as st
-import numpy as np
 import pandas as pd
 
 from utils import add_timestamp, compare_dataframes, create_data, read_data, update_data
 
 
-def Results(database_lock: bool, season: str):
+def Results(database_lock: bool, season: str) -> None:
+    """Record game and players results.
+
+    Args:
+        database_lock (bool): True if the database lock is enabled.
+        season (str): The hockey season, usually the calendar year.
+
+    Retuns: None
+    """
     st.title("Results")
     st.subheader("- Mark off players who played (regardless if they were selected)")
     st.subheader("- Add the results, and cards given", divider="green")
@@ -45,23 +52,29 @@ def Results(database_lock: bool, season: str):
 
     ### Filters for player data ###
     col1, col2, _, _ = st.columns(4)
-    round = col1.selectbox("Round", game_result["round"].unique())
+    team_round = col1.selectbox("Round", game_result["round"].unique())
     team = col2.selectbox("Team", game_result["team_name"].unique())
 
     ### Validation for player data ###
-    if not season and not round:
+    if not season and not team_round:
         raise ValueError("Enter values for season and round.")
 
     ### Load player data ###
-    player_result = player_data(season, round, team)
+    player_result = player_data(season, team_round, team)
     if not player_result.shape[0]:
         st.error(
-            f"No games to selected player for. If there are games on this round contact the administrator."
+            """
+                No games to selected player for.
+                If there are games on this round contact the administrator.
+            """
         )
         return
 
     st.subheader(
-        f"""Record player results for round { round }, { team } vs { player_result["opposition"].loc[0] }"""
+        f"""
+            Record player results for round { team_round }, 
+            { team } vs { player_result["opposition"].loc[0] }
+        """
     )
     ### create input table for game results ###
     updated_player_results = input_player_results(player_result)
@@ -72,7 +85,7 @@ def Results(database_lock: bool, season: str):
         return
 
     # update rows
-    result_updates = changes[changes["create_result"] == False]
+    result_updates = changes[not changes["create_result"]]
     st.write("Update data", result_updates)
     update_player_results(
         result_updates,
@@ -80,17 +93,27 @@ def Results(database_lock: bool, season: str):
     )
 
     # create rows
-    creates = changes[changes["create_result"] == True]
+    creates = changes[bool(changes["create_result"])]
     st.write("Create data", creates)
     create_player_results(creates, lock=database_lock)
 
     # refresh data
-    player_result = player_data(season, round, team)
+    player_result = player_data(season, team_round, team)
 
 
 def game_data(
     season: str, date_end: dt.datetime, date_inteval: int = 6
 ) -> pd.DataFrame:
+    """Extact the game data for the week.
+
+    Args:
+        season (str): The hockey season, usually the calendar year.
+        date_end (dt.datetime): The end timestamp.
+        date_inteval (int, optional): How many days before the date_end to include. Defualts to 6.
+
+    Retuns:
+        pd.DataFrame: The results of the query.
+    """
     date_start = date_end - dt.timedelta(days=date_inteval)
     df = read_data(
         f"""
@@ -134,6 +157,14 @@ def game_data(
 
 
 def input_game_results(df: pd.DataFrame) -> pd.DataFrame:
+    """Update the game results.
+
+    Args:
+        df (pd.DataFrame): The dataframe to be updated.
+
+    Returns:
+        pd.DataFrame: The updated dataframe.
+    """
     # TODO: add schema validation on df
     game_id = df["game_id"]
     _df = df.drop(columns=["game_id"])
@@ -165,6 +196,14 @@ def input_game_results(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def update_game_results(df: pd.DataFrame, lock: bool = True) -> None:
+    """Write the game updates to the database.
+
+    Args:
+        df (pd.DataFrame): The dataframe of updates to be made.
+        lock (bool, optional): True if the database lock is enabled. Defaults to True.
+
+    Returns: None
+    """
     # TODO: Add validation
     if lock:
         st.error("Database is locked, contact the administrator.")
@@ -174,7 +213,17 @@ def update_game_results(df: pd.DataFrame, lock: bool = True) -> None:
         update_data("games", "goals_against", row["game_id"], row["goals_against"])
 
 
-def player_data(season: str, round: str, team: str):
+def player_data(season: str, team_round: str, team: str) -> pd.DataFrame:
+    """Extact the player data for the team and round.
+
+    Args:
+        season (str): The hockey season, usually the calendar year.
+        team_round (str): The teams round of the season.
+        team (str): The team results are being updated for.
+
+    Retuns:
+        pd.DataFrame: The results of the query.
+    """
     df = read_data(
         f"""
         with _games as (
@@ -191,7 +240,7 @@ def player_data(season: str, round: str, team: str):
             on g.team_id = t.id
             where
                 g.season = '{ season }'
-                and g.round = '{ round }'
+                and g.round = '{ team_round }'
                 and t.team || ' - ' || t.grade = '{ team }'
         ),
 
@@ -276,6 +325,14 @@ def player_data(season: str, round: str, team: str):
 
 
 def input_player_results(df: pd.DataFrame):
+    """Update the player results.
+
+    Args:
+        df (pd.DataFrame): The dataframe to be updated.
+
+    Returns:
+        pd.DataFrame: The updated dataframe.
+    """
     player_id = df["player_id"]
     game_id = df["game_id"]
     selection_id = df["selection_id"]
@@ -345,6 +402,14 @@ def input_player_results(df: pd.DataFrame):
 
 
 def update_player_results(df: pd.DataFrame, lock: bool = True) -> None:
+    """Write the player updates to the database.
+
+    Args:
+        df (pd.DataFrame): The dataframe of updates to be made.
+        lock (bool, optional): True if the database lock is enabled. Defaults to True.
+
+    Returns: None
+    """
     # TODO: Add validation
     if lock:
         st.error("Database is locked, contact the administrator.")
@@ -361,6 +426,14 @@ def update_player_results(df: pd.DataFrame, lock: bool = True) -> None:
 
 
 def create_player_results(df: pd.DataFrame, lock: bool = True) -> None:
+    """Create the player results in the database.
+
+    Args:
+        df (pd.DataFrame): The dataframe of rows to be created.
+        lock (bool, optional): True if the database lock is enabled. Defaults to True.
+
+    Returns: None
+    """
     # TODO: Add validation
     if lock:
         st.error("Database is locked, contact the administrator.")

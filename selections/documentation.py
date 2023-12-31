@@ -2,6 +2,9 @@ import streamlit as st
 
 
 def Documentation(*args):
+    """
+    Write the documentation for the application.
+    """
     st.title("West Hockey Newcastle Selections App")
 
     st.write("The following pages can be selected from the drop down menu above.")

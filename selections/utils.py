@@ -1,7 +1,7 @@
 import os
 import string
 import random
-from typing import Any, Dict
+from typing import Any
 import datetime as dt
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -25,12 +25,32 @@ config = Config(
 engine = create_engine(config.database.db_url())
 
 
-def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits) -> str:
+    """creaete random id
+
+    Args:
+        size (int, optional): The length of the id. Defaults to 6.
+        chars (_type_, optional): (
+            The characters included in the id.
+            Defaults to string.ascii_uppercase+string.digits.
+        )
+
+    Returns:
+        str: The random id
+    """
     return "".join(random.choice(chars) for _ in range(size))
 
 
 # Function to create a SQLite connection and retrieve data
 def read_data(sql_statement: str) -> pd.DataFrame:
+    """Help function to read data from the database.
+
+    Args:
+        sql_statement (str): The SQL statement to pass to the db.
+
+    Returns:
+        pd.DataFrame: A pandas dataframe containing the results.
+    """
     try:
         with engine.connect() as session:
             return pd.read_sql_query(sql_statement, session)
@@ -38,8 +58,16 @@ def read_data(sql_statement: str) -> pd.DataFrame:
         session.close()
 
 
-def create_data(table: str, columns: tuple[str], values: tuple[Any]):
-    # TODO: Add user to the change
+def create_data(table: str, columns: tuple[str], values: tuple[Any]) -> None:
+    """Helper function to write a row of data to the database
+
+    Args:
+        table (str): The table to write to.
+        columns (tuple(str)): The columns to add a row for.
+        values (tuple(Any)): The values to write.
+
+    Returns: None
+    """
     if config.app.database_lock:
         st.error(
             "A hard lock has been applied to the databases. Contact the administrator."
@@ -59,8 +87,19 @@ def create_data(table: str, columns: tuple[str], values: tuple[Any]):
 
 
 def update_data(
-    table: str, column: str, id: str, value: Any, value_string_type: bool = False
-):
+    table: str, column: str, row_id: str, value: Any, value_string_type: bool = False
+) -> None:
+    """Helper function to update a row of data in the database
+
+    Args:
+        table (str): The table to update.
+        column (str): The column to update.
+        row_id (str): The id of the record to update.
+        value (Any): The new value.
+        value_string_type (bool): True if the value is of string type.
+
+    Returns: None
+    """
     # TODO: Add user to the change
     if config.app.database_lock:
         st.error(
@@ -68,23 +107,26 @@ def update_data(
         )
         return
     try:
-        sql = f"""UPDATE { table } SET { column } = { value } WHERE id = '{ id }'"""
+        sql = f"""UPDATE { table } SET { column } = { value } WHERE id = '{ row_id }'"""
         if value_string_type:
-            sql = (
-                f"""UPDATE { table } SET { column } = '{ value }' WHERE id = '{ id }'"""
-            )
+            sql = f"""UPDATE { table } SET { column } = '{ value }' WHERE id = '{ row_id }'"""
         st.write(sql)
         with engine.connect() as session:
             # Update a record
             session.execute(text(sql))
             # Commit changes
             session.commit()
-        st.write(f"Record { id } updated successfully to { column } = { value }")
+        st.write(f"Record { row_id } updated successfully to { column } = { value }")
     finally:
         session.close()
 
 
-def add_timestamp() -> str:
+def add_timestamp() -> pd.to_datetime:
+    """Calculates the current timestamp in isoformat.
+
+    Returns:
+        pd.to_datetime: The current timestamp in isoformat
+    """
     return pd.to_datetime(dt.datetime.now().isoformat())
 
 
@@ -106,9 +148,19 @@ def compare_dataframes(
 
 
 def calculate_date_interval(
-    date_end: dt.datetime, date_inteval: int = 6, filter=True
-) -> Dict[str, tuple[str, str]]:
+    date_end: dt.datetime, date_inteval: int = 6, date_filter=True
+) -> tuple[str, str]:
+    """Calculate the start date based on the end date and a interval.
+
+    Args:
+        date_end (dt.datetime): The end date.
+        date_inteval (int, optional): The interval in days. Defaults to 6.
+        date_filter (bool, optional): True to format the dates for use in SQL. Defaults to True.
+
+    Returns:
+        tuple[str, str]: The start and end date of the period.
+    """
     date_start = date_end - dt.timedelta(days=date_inteval)
-    if filter:
+    if date_filter:
         return (date_start.strftime("%Y%m%d"), date_end.strftime("%Y%m%d"))
     return (date_start.strftime("%d %B"), date_end.strftime("%d %B"))

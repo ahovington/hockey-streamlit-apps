@@ -1,13 +1,14 @@
 import streamlit as st
-from auth import login, register_user
+
+from auth import login
 from documentation import Documentation
-from selections import Selections
-from grade_assignment import GradeAssignment
+from grade_assignments import GradeAssignments
 from results import Results
+from selections import Selections
 
 apps = {
     "Documentation": Documentation,
-    "Grade Assignments": GradeAssignment,
+    "Grade Assignments": GradeAssignments,
     "Selections": Selections,
     "Results": Results,
 }
@@ -27,9 +28,9 @@ if __name__ == "__main__":
     col1.image("./rosella.png")
 
     if login():
-        app_name = tuple(apps.keys())[0]
-        app_name = col2.selectbox("Select page", tuple(apps.keys()))
-        apps[app_name](database_lock, season)
+        APP_NAME = tuple(apps.keys())[0]
+        APP_NAME = col2.selectbox("Select page", tuple(apps.keys()))
+        apps[APP_NAME](database_lock, season)
 
     # implement with db
     # else:

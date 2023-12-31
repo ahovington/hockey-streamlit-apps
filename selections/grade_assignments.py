@@ -2,10 +2,18 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-from utils import compare_dataframes, read_data, update_data
+from utils import compare_dataframes, read_data, update_data, engine
 
 
-def GradeAssignment(database_lock: bool, season: str):
+def GradeAssignments(database_lock: bool, season: str) -> None:
+    """Assign registered players to a grade.
+
+    Args:
+        database_lock (bool): True if the database lock is enabled.
+        season (str): The hockey season, usually the calendar year.
+
+    Retuns: None
+    """
     st.title("Assign players a team and grade")
     st.subheader("Allocate players to one of the following teams.", divider="green")
 
@@ -50,7 +58,15 @@ def GradeAssignment(database_lock: bool, season: str):
         player = player_data(season)
 
 
-def team_data(season: str):
+def team_data(season: str) -> pd.DataFrame:
+    """Extact the teams for the current season.
+
+    Args:
+        season (str): The hockey season, usually the calendar year.
+
+    Retuns:
+        pd.DataFrame: The results of the query.
+    """
     return read_data(
         f"""
         select
@@ -72,12 +88,20 @@ def team_data(season: str):
 
 
 def input_team_table(df: pd.DataFrame) -> pd.DataFrame:
+    """Update the team data.
+
+    Args:
+        df (pd.DataFrame): The dataframe to be updated.
+
+    Returns:
+        pd.DataFrame: The updated dataframe.
+    """
     team_id = df["team_id"]
     _df = df.drop(columns=["team_id"], axis=1)
     with st.form("Teams"):
         result = st.data_editor(
             _df,
-            disabled=["grade" "team"],
+            disabled=["grade", "team"],
             hide_index=True,
             use_container_width=True,
         )
@@ -88,7 +112,15 @@ def input_team_table(df: pd.DataFrame) -> pd.DataFrame:
     return result[df.columns]
 
 
-def update_team_data(df: pd.DataFrame, lock: bool = True):
+def update_team_data(df: pd.DataFrame, lock: bool = True) -> None:
+    """Write the team updates to the database.
+
+    Args:
+        df (pd.DataFrame): The dataframe of updates to be made.
+        lock (bool, optional): True if the database lock is enabled. Defaults to True.
+
+    Returns: None
+    """
     if lock:
         st.error("Database is locked, contact the administrator.")
         return
@@ -106,7 +138,15 @@ def update_team_data(df: pd.DataFrame, lock: bool = True):
         update_data("teams", "team_order", row["team_id"], row["team_order"])
 
 
-def player_data(season: str):
+def player_data(season: str) -> pd.DataFrame:
+    """Extact the registered players for the current season.
+
+    Args:
+        season (str): The hockey season, usually the calendar year.
+
+    Retuns:
+        pd.DataFrame: The results of the query.
+    """
     return read_data(
         f"""
         select
@@ -126,6 +166,15 @@ def player_data(season: str):
 
 
 def input_player_team_table(df: pd.DataFrame, team_names: list[str]) -> pd.DataFrame:
+    """Update the team data.
+
+    Args:
+        df (pd.DataFrame): The dataframe to be updated.
+        team_names (list[str]): A list of the teams for the season.
+
+    Returns:
+        pd.DataFrame: The updated dataframe.
+    """
     registration_id = df["registration_id"]
     _df = df.drop("registration_id", axis=1)
     with st.form("Grade Assignments"):
@@ -155,6 +204,14 @@ def input_player_team_table(df: pd.DataFrame, team_names: list[str]) -> pd.DataF
 
 
 def update_default_team(df: pd.DataFrame, lock: bool = True):
+    """Write the players grade updates to the database.
+
+    Args:
+        df (pd.DataFrame): The dataframe of updates to be made.
+        lock (bool, optional): True if the database lock is enabled. Defaults to True.
+
+    Returns: None
+    """
     if lock:
         st.error("Database is locked, contact the administrator.")
         return

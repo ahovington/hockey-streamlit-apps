@@ -13,7 +13,15 @@ from utils import (
 )
 
 
-def Selections(database_lock: bool, season: str):
+def Selections(database_lock: bool, season: str) -> None:
+    """The selections page of the App
+
+    Args:
+        database_lock (bool): True if the database lock is enabled.
+        season (str): The hockey season, usually the calendar year.
+
+    Retuns: None
+    """
     st.title("Selections")
     st.subheader("Select players to play each game.", divider="green")
 
@@ -36,13 +44,15 @@ def Selections(database_lock: bool, season: str):
         max_value=dt.date(year=int(season), month=12, day=31),
     )
 
-    start_date_ui, end_date_ui = calculate_date_interval(date_filter, filter=False)
+    start_date_ui, end_date_ui = calculate_date_interval(
+        date_filter, date_filter == False
+    )
     st.write(f"""Games between { start_date_ui } and { end_date_ui } """)
 
     ### Generate selections table ###
-    with st.expander(f"Preview selections", expanded=False):
+    with st.expander("Preview selections", expanded=False):
         col1, _, _ = st.columns(3)
-        if col1.button(f"Generate selections", use_container_width=True):
+        if col1.button("Generate selections", use_container_width=True):
             st.error("Generate selections has not been implemented.")
 
         selected = selections_output_data(season, date_filter)
@@ -74,15 +84,15 @@ def Selections(database_lock: bool, season: str):
 
     ### Filters for player data ###
     col1, col2, _, _ = st.columns(4)
-    round = col1.selectbox("Round", game["round"].unique())
+    team_round = col1.selectbox("Round", game["round"].unique())
     team = col2.selectbox("Team", game["team_name"].unique())
 
     ### Validation for player data ###
-    if not season and not round:
+    if not season and not team_round:
         raise ValueError("Enter values for season and round.")
 
     ### Load player data and show the selections table ###
-    selections = selections_input_data(season, round, team)
+    selections = selections_input_data(season, team_round, team)
     if not selections.shape[0]:
         return
 
@@ -94,23 +104,33 @@ def Selections(database_lock: bool, season: str):
         return
 
     # update rows
-    updates = changes[changes["create_selection"] == False]
+    updates = changes[not changes["create_selection"]]
     st.write("Update data", updates)
     update_selection(updates, lock=database_lock)
 
     # create rows
-    creates = changes[changes["create_selection"] == True]
+    creates = changes[bool(changes["create_selection"])]
     st.write("Create data", creates)
     create_selection(creates, lock=database_lock)
 
     # refresh data
     game = game_data(season, date_filter)
-    selections = selections_input_data(season, round, team)
+    selections = selections_input_data(season, team_round, team)
 
 
 def selections_output_data(
     season: str, date_end: dt.datetime, date_inteval: int = 6
 ) -> pd.DataFrame:
+    """Extact the selections made for the week.
+
+    Args:
+        season (str): The hockey season, usually the calendar year.
+        date_end (dt.datetime): The end timestamp.
+        date_inteval (int, optional): How many days before the date_end to include. Defualts to 6.
+
+    Retuns:
+        pd.DataFrame: The results of the query.
+    """
     date_start, date_end = calculate_date_interval(date_end, date_inteval)
     df = read_data(
         f"""
@@ -167,7 +187,10 @@ def selections_output_data(
     ### validation ###
     if not df.shape[0]:
         st.error(
-            "There are no selections for this date range. If there are games showing, ensure players have been selected for those games."
+            """
+            There are no selections for this date range.
+            If there are games showing, ensure players have been selected for those games.
+            """
         )
         return pd.DataFrame()
     df.loc[:, "game_time"] = pd.to_datetime(df.loc[:, "start_ts"]).dt.strftime(
@@ -179,6 +202,15 @@ def selections_output_data(
 def output_selections_table(
     df: pd.DataFrame, header_fields: str, week_end: str
 ) -> None:
+    """Present the selections made for the week.
+
+    Args:
+        df (pd.DataFrame): The hockey season, usually the calendar year.
+        header_fields (str): The fields to add to the head of the selections table.
+        week_end (str): The formatted the end of the week date.
+
+    Retuns: None
+    """
     # Calculate output table column order
     col_order = (
         df[["team_name", "team_order"]]
@@ -189,24 +221,27 @@ def output_selections_table(
 
     ### Split the df into goalies and field players ###
     # Goalies
-    _selected_keeper = df[df["goal_keeper"] == True].sort_values("team_order")
+    _selected_keeper = df[bool(df["goal_keeper"])].sort_values("team_order")
     _selected_keeper.loc[:, "id"] = (
         _selected_keeper["team_name"] + _selected_keeper["round"]
     )
     selected_keeper = _selected_keeper.drop_duplicates(subset=["team_name", "round"])
     dup_keeper = compare_dataframes(_selected_keeper, selected_keeper, "id")
     if dup_keeper.shape[0]:
-        for i, row in dup_keeper.iterrows():
+        for _, row in dup_keeper.iterrows():
+            # TODO: This error shows the wrong keeper.
             st.error(
                 f"""
-                Multiple Goal Keepers have been chosen for team { row["team_name"] } and round { row["round"] }\n
-                The selections only support one Goal keeper, **{ row["players_name"].upper() }** has been removed from this game.\n
+                Multiple Goal Keepers have been chosen for team
+                { row["team_name"] } and round { row["round"] }\n
+                The selections only support one Goal keeper, **{ row["players_name"].upper() }**
+                has been removed from this game.\n
                 To fix this only select one keeper in the selections.
                 """
             )
     selected_keeper.loc[:, "selection_no"] = "GK"
     # Field player
-    selected_player = df[df["goal_keeper"] == False].sort_values("team_order")
+    selected_player = df[not df["goal_keeper"]].sort_values("team_order")
     selected_player.loc[:, "selection_no"] = (
         selected_player.sort_values(
             ["goal_keeper", "players_name"], ascending=[False, True]
@@ -261,6 +296,16 @@ def output_selections_table(
 
 
 def game_data(season: str, date_end: dt.datetime, date_inteval: int = 6):
+    """Extact the game data for the week.
+
+    Args:
+        season (str): The hockey season, usually the calendar year.
+        date_end (dt.datetime): The end timestamp.
+        date_inteval (int, optional): How many days before the date_end to include. Defualts to 6.
+
+    Retuns:
+        pd.DataFrame: The results of the query.
+    """
     date_start, date_end = calculate_date_interval(date_end, date_inteval)
     df = read_data(
         f"""
@@ -303,7 +348,17 @@ def game_data(season: str, date_end: dt.datetime, date_inteval: int = 6):
     return df[["round", "team_name", "opposition", "game_time", "players_selected"]]
 
 
-def selections_input_data(season: str, round: str, team: str):
+def selections_input_data(season: str, team_round: str, team: str):
+    """Extact the selections data for the team and round.
+
+    Args:
+        season (str): The hockey season, usually the calendar year.
+        team_round (str): The teams round of the season.
+        team (str): The team being selected for.
+
+    Retuns:
+        pd.DataFrame: The results of the query.
+    """
     df = read_data(
         f"""
         with _games as (
@@ -315,7 +370,7 @@ def selections_input_data(season: str, round: str, team: str):
             on g.team_id = t.id
             where
                 g.season = '{ season }'
-                and g.round = '{ round }'
+                and g.round = '{ team_round }'
                 and t.team || ' - ' || t.grade = '{ team }'
         ),
         
@@ -370,7 +425,10 @@ def selections_input_data(season: str, round: str, team: str):
     )
     if not df.shape[0]:
         st.error(
-            f"No games to selected player for. If there are games on this round contact the administrator."
+            """
+            No games to selected player for.
+            If there are games on this round contact the administrator.
+            """
         )
         return pd.DataFrame()
     return df
@@ -379,7 +437,16 @@ def selections_input_data(season: str, round: str, team: str):
 def input_selections_table(
     df: pd.DataFrame,
     team: str,
-):
+) -> pd.DataFrame:
+    """Update the selections.
+
+    Args:
+        df (pd.DataFrame): The dataframe to be updated.
+        team (str): The team being selected for.
+
+    Returns:
+        pd.DataFrame: The updated dataframe.
+    """
     ordered_df = df.sort_values(
         ["goal_keeper", "selected", "players_main_team"],
         ascending=[False, False, False],
@@ -428,7 +495,7 @@ def input_selections_table(
             hide_index=True,
         )
         # Force selected to be true if goal_keeper is true
-        result.loc[result["goal_keeper"] == True, "selected"] = True
+        result.loc[bool(result["goal_keeper"]), "selected"] = True
         # add id columns back
         result.loc[:, "selection_id"] = selection_id
         result.loc[:, "game_id"] = game_id
@@ -442,24 +509,40 @@ def input_selections_table(
     return result[df.columns]
 
 
-def update_selection(selections: pd.DataFrame, lock: bool = True) -> None:
+def update_selection(df: pd.DataFrame, lock: bool = True) -> None:
+    """Write the selection updates to the database.
+
+    Args:
+        df (pd.DataFrame): The dataframe of updates to be made.
+        lock (bool, optional): True if the database lock is enabled. Defaults to True.
+
+    Returns: None
+    """
     # TODO: Add validation
     if lock:
         st.error("Database is locked, contact the administrator.")
         return
-    for _, row in selections.iterrows():
+    for _, row in df.iterrows():
         update_data(
             "selections", "goal_keeper", row["selection_id"], row["goal_keeper"]
         )
         update_data("selections", "selected", row["selection_id"], row["selected"])
 
 
-def create_selection(selections: pd.DataFrame, lock: bool = True) -> None:
+def create_selection(df: pd.DataFrame, lock: bool = True) -> None:
+    """Create the selections in the database.
+
+    Args:
+        df (pd.DataFrame): The dataframe of rows to be created.
+        lock (bool, optional): True if the database lock is enabled. Defaults to True.
+
+    Returns: None
+    """
     # TODO: Add validation
     if lock:
         st.error("Database is locked, contact the administrator.")
         return
-    for _, row in selections.iterrows():
+    for _, row in df.iterrows():
         create_data(
             "selections",
             (
