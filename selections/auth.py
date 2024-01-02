@@ -1,16 +1,16 @@
-import yaml
-from yaml.loader import SafeLoader
+import hashlib
 import streamlit as st
 import streamlit_authenticator as stauth
 
+from utils import read_data, update_data
 
-def login() -> bool:
+
+def login(authenticator: stauth.Authenticate) -> bool:
     """Login into app
 
     Returns:
         bool: The result of the login attempt, True if successful.
     """
-    authenticator = _authenticator()
     authenticator.login("Login", "main")
     if st.session_state["authentication_status"]:
         authenticator.logout("Logout", "main", key="unique_key")
@@ -39,10 +39,9 @@ def _reset_password(authenticator: stauth.Authenticate) -> None:
         _update_config(authenticator)
 
 
-def register_user() -> None:
+def register_user(authenticator: stauth.Authenticate) -> None:
     """Register a new user."""
-    authenticator = _authenticator()
-    if authenticator.register_user("Create user", preauthorization=False):
+    if authenticator.register_user("Create user", preauthorization=True):
         st.success("User registered successfully")
         _update_config(authenticator)
 
@@ -53,30 +52,72 @@ def _update_config(authenticator: stauth.Authenticate) -> None:
     Args:
         authenticator (stauth.Authenticate): The authenticator used to login.
     """
-    config = {
-        "credentials": authenticator.credentials,
-        "cookie": {
-            "expiry_days": authenticator.cookie_expiry_days,
-            "key": authenticator.key,
-            "name": authenticator.cookie_name,
-        },
-        "preauthorized": authenticator.preauthorized,
-    }
-    with open("selections/config.yaml", "w", encoding="utf-8") as file:
-        yaml.dump(config, file, default_flow_style=False)
+    gen_id = lambda x: hashlib.shake_256(x.encode("utf-8")).hexdigest(20)
+    for username, attrs in authenticator.credentials["usernames"].items():
+        if not attrs["password"]:
+            continue
+        update_data(
+            "users",
+            column="hashed_password",
+            value=attrs["password"],
+            row_id=gen_id(attrs["email"]),
+            value_string_type=True,
+        )
+        update_data(
+            "users",
+            column="username",
+            value=username,
+            row_id=gen_id(attrs["email"]),
+            value_string_type=True,
+        )
 
 
-def _authenticator() -> stauth.Authenticate:
+def auth() -> stauth.Authenticate:
     """Pass the paramaters to the authenicator.
 
     Returns:
         stauth.Authenticate: The authenicator.
     """
-    with open("selections/config.yaml", "r", encoding="utf-8") as file:
-        config = yaml.load(file, Loader=SafeLoader)
+    users = read_data(
+        """
+        select
+            id,
+            name,
+            username,
+            email,
+            hashed_password
+        from users
+        where
+            role in (
+                'admin',
+                'committee_member',
+                'team_manager',
+                'selector'
+            )
+        """
+    )
+    config = {
+        "credentials": {
+            "usernames": {
+                row["email"]: {
+                    "id": row["id"],
+                    "email": row["email"],
+                    "name": row["name"],
+                    "password": row["hashed_password"],
+                }
+                for _, row in users.iterrows()
+            }
+        },
+        "preauthorized": {
+            "emails": [
+                email for email in users[users["hashed_password"].isna()]["email"]
+            ]
+        },
+    }
     return stauth.Authenticate(
         credentials=config["credentials"],
-        cookie_name=config["cookie"]["name"],
-        key=config["cookie"]["key"],
-        cookie_expiry_days=config["cookie"]["expiry_days"],
+        cookie_name="selections_streamlit_cookie",
+        key="trcyvgubhinjmkl",
+        cookie_expiry_days=30,
+        preauthorized=config["preauthorized"],
     )

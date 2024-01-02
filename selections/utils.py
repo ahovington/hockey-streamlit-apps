@@ -58,13 +58,16 @@ def read_data(sql_statement: str) -> pd.DataFrame:
         session.close()
 
 
-def create_data(table: str, columns: tuple[str], values: tuple[Any]) -> None:
+def create_data(
+    table: str, columns: tuple[str], values: tuple[Any], verbose: bool = False
+) -> None:
     """Helper function to write a row of data to the database
 
     Args:
         table (str): The table to write to.
         columns (tuple(str)): The columns to add a row for.
         values (tuple(Any)): The values to write.
+        verbose (bool, optional): True to print the queries written to the database.
 
     Returns: None
     """
@@ -77,17 +80,23 @@ def create_data(table: str, columns: tuple[str], values: tuple[Any]) -> None:
         with engine.connect() as session:
             # Update a record
             sql = f"""INSERT INTO { table } ({', '.join(columns) }) VALUES { values }"""
-            st.write(sql)
             session.execute(text(sql))
             # Commit changes
             session.commit()
-        st.write(f"Record created successfully to { columns } = { values }")
+        if verbose:
+            st.write(sql)
+            st.write(f"Record created successfully to { columns } = { values }")
     finally:
         session.close()
 
 
 def update_data(
-    table: str, column: str, row_id: str, value: Any, value_string_type: bool = False
+    table: str,
+    column: str,
+    row_id: str,
+    value: Any,
+    value_string_type: bool = False,
+    verbose: bool = False,
 ) -> None:
     """Helper function to update a row of data in the database
 
@@ -96,12 +105,13 @@ def update_data(
         column (str): The column to update.
         row_id (str): The id of the record to update.
         value (Any): The new value.
-        value_string_type (bool): True if the value is of string type.
+        value_string_type (bool, optional): True if the value is of string type.
+        verbose (bool, optional): True to print the queries written to the database.
 
     Returns: None
     """
     # TODO: Add user to the change
-    if config.app.database_lock:
+    if config.app.database_lock and table != "users":
         st.error(
             "A hard lock has been applied to the databases. Contact the administrator."
         )
@@ -110,13 +120,16 @@ def update_data(
         sql = f"""UPDATE { table } SET { column } = { value } WHERE id = '{ row_id }'"""
         if value_string_type:
             sql = f"""UPDATE { table } SET { column } = '{ value }' WHERE id = '{ row_id }'"""
-        st.write(sql)
         with engine.connect() as session:
             # Update a record
             session.execute(text(sql))
             # Commit changes
             session.commit()
-        st.write(f"Record { row_id } updated successfully to { column } = { value }")
+        if verbose:
+            st.write(sql)
+            st.write(
+                f"Record { row_id } updated successfully to { column } = { value }"
+            )
     finally:
         session.close()
 

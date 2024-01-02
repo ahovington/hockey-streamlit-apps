@@ -1,6 +1,6 @@
 import streamlit as st
 
-from auth import login
+from auth import login, register_user, auth
 from documentation import Documentation
 from grade_assignments import GradeAssignments
 from results import Results
@@ -27,12 +27,11 @@ if __name__ == "__main__":
     col1, col2 = st.columns([2, 3])
     col1.image("./rosella.png")
 
-    if login():
+    authenticator = auth()
+    if login(authenticator):
         APP_NAME = tuple(apps.keys())[0]
         APP_NAME = col2.selectbox("Select page", tuple(apps.keys()))
         apps[APP_NAME](database_lock, season)
-
-    # implement with db
-    # else:
-    #     with st.expander("Create login"):
-    #         register_user()
+    else:
+        with st.expander("Create login"):
+            register_user(authenticator)
