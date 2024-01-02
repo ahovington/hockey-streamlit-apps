@@ -1,3 +1,5 @@
+import yaml
+from yaml.loader import SafeLoader
 import hashlib
 import streamlit as st
 import streamlit_authenticator as stauth
@@ -24,12 +26,16 @@ def login(authenticator: stauth.Authenticate) -> bool:
         return False
 
 
-def _reset_password(authenticator: stauth.Authenticate) -> None:
+def _reset_password(
+    authenticator: stauth.Authenticate, use_config: bool = True
+) -> None:
     """Resets users password after login
 
     Args:
         authenticator (stauth.Authenticate): The authenticator used to login.
     """
+    if use_config:
+        return
     if authenticator.reset_password(
         username=st.session_state["username"],
         form_name="Reset password",
@@ -39,8 +45,10 @@ def _reset_password(authenticator: stauth.Authenticate) -> None:
         _update_config(authenticator)
 
 
-def register_user(authenticator: stauth.Authenticate) -> None:
+def register_user(authenticator: stauth.Authenticate, use_config: bool = True) -> None:
     """Register a new user."""
+    if use_config:
+        return
     if authenticator.register_user("", preauthorization=True):
         st.success("User registered successfully")
         _update_config(authenticator)
@@ -72,52 +80,56 @@ def _update_config(authenticator: stauth.Authenticate) -> None:
         )
 
 
-def auth() -> stauth.Authenticate:
+def auth(use_config: bool = True) -> stauth.Authenticate:
     """Pass the paramaters to the authenicator.
 
     Returns:
         stauth.Authenticate: The authenicator.
     """
-    users = read_data(
-        """
-        select
-            id,
-            name,
-            username,
-            email,
-            hashed_password
-        from users
-        where
-            role in (
-                'admin',
-                'committee_member',
-                'team_manager',
-                'selector'
-            )
-        """
-    )
-    config = {
-        "credentials": {
-            "usernames": {
-                row["email"]: {
-                    "id": row["id"],
-                    "email": row["email"],
-                    "name": row["name"],
-                    "password": row["hashed_password"],
+    if use_config:
+        with open("selections/config.yaml", "r", encoding="utf-8") as file:
+            config = yaml.load(file, Loader=SafeLoader)
+    else:
+        users = read_data(
+            """
+            select
+                id,
+                name,
+                username,
+                email,
+                hashed_password
+            from users
+            where
+                role in (
+                    'admin',
+                    'committee_member',
+                    'team_manager',
+                    'selector'
+                )
+            """
+        )
+        config = {
+            "credentials": {
+                "usernames": {
+                    row["email"]: {
+                        "id": row["id"],
+                        "email": row["email"],
+                        "name": row["name"],
+                        "password": row["hashed_password"],
+                    }
+                    for _, row in users.iterrows()
                 }
-                for _, row in users.iterrows()
-            }
-        },
-        "preauthorized": {
-            "emails": [
-                email for email in users[users["hashed_password"].isna()]["email"]
-            ]
-        },
-    }
+            },
+            "preauthorized": {
+                "emails": [
+                    email for email in users[users["hashed_password"].isna()]["email"]
+                ]
+            },
+        }
     return stauth.Authenticate(
         credentials=config["credentials"],
         cookie_name="selections_streamlit_cookie",
         key="trcyvgubhinjmkl",
         cookie_expiry_days=30,
-        preauthorized=config["preauthorized"],
+        preauthorized=config.get("preauthorized", []),
     )
