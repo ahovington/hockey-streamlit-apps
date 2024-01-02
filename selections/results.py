@@ -271,8 +271,10 @@ def player_data(season: str, team_round: str, team: str) -> pd.DataFrame:
                 g.start_ts
             from players as p
             inner join registrations as r
-            on p.id = r.national_id
+            on p.id = r.player_id
             cross join _games as g
+            where
+                r.season = '{ season }'
         ),
 
         _played_games as (

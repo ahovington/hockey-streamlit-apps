@@ -158,7 +158,7 @@ def player_data(season: str) -> pd.DataFrame:
             r.grade
         from players as p
         inner join registrations as r
-        on p.id = r.national_id
+        on p.id = r.player_id
         where
             r.season = '{ season }'
         order by

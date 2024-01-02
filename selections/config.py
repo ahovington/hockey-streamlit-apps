@@ -1,6 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from dotenv import load_dotenv
+from pathlib import Path
 from urllib.parse import quote_plus
+
+load_dotenv(dotenv_path=Path(".env"))
 
 
 @dataclass
