@@ -14,7 +14,7 @@ apps = {
 }
 if __name__ == "__main__":
     st.set_page_config(
-        page_title="Newcastle West Hockey Selections App",
+        page_title="West Hockey Newcastle Selections App",
         page_icon="https://cdn.revolutionise.com.au/cups/whc/files/ptejzkfy3k8qvtlg.ico",
         layout="wide",
         initial_sidebar_state="collapsed",
@@ -24,8 +24,9 @@ if __name__ == "__main__":
         database_lock = st.toggle("Lock database", True)
         season = st.selectbox("Season", ["2023", "2024"])
 
-    col1, col2 = st.columns([2, 3])
+    col1, col2 = st.columns([2, 5])
     col1.image("./rosella.png")
+    col2.title("West Hockey Newcastle Selections")
 
     authenticator = auth()
     if login(authenticator):

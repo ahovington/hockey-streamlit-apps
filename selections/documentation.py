@@ -5,7 +5,7 @@ def Documentation(*args):
     """
     Write the documentation for the application.
     """
-    st.title("West Hockey Newcastle Selections App")
+    st.title("Documentation")
 
     st.write("The following pages can be selected from the drop down menu above.")
 
@@ -50,8 +50,9 @@ def Documentation(*args):
         """
     )
 
+    st.write("- DONE: Add user authentication.")
     st.write("- DONE: Create results page.")
-    st.write("- DONE: Create weekly selection summary")
+    st.write("- DONE: Create weekly selection summary.")
     st.write("- DONE: Allow for multiple games per week per team.")
 
     st.subheader("Databases")

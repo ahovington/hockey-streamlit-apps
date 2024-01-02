@@ -41,7 +41,7 @@ def _reset_password(authenticator: stauth.Authenticate) -> None:
 
 def register_user(authenticator: stauth.Authenticate) -> None:
     """Register a new user."""
-    if authenticator.register_user("Create user", preauthorization=True):
+    if authenticator.register_user("", preauthorization=True):
         st.success("User registered successfully")
         _update_config(authenticator)
 
