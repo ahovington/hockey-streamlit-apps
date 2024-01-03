@@ -38,23 +38,3 @@ def Documentation(*args):
         """
     )
     st.write("")
-
-    st.subheader("", divider="green")
-    st.subheader("--- To-do list ---")
-    st.subheader("Selections")
-    st.write("- Update/Create teams. 50% done. TODO: Create teams.")
-    st.write("- Load / update games")
-    st.write(
-        """
-        - Create locks so selections cant be changed after the game. Manual lock implemented.
-        """
-    )
-
-    st.write("- DONE: Add user authentication.")
-    st.write("- DONE: Create results page.")
-    st.write("- DONE: Create weekly selection summary.")
-    st.write("- DONE: Allow for multiple games per week per team.")
-
-    st.subheader("Databases")
-    st.write("- Add users to track who made a change")
-    st.write("- Research db writing concurrency")
