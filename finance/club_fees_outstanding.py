@@ -8,10 +8,6 @@ from utils import read_data
 def ClubFeesOustanding() -> None:
     """Summarise outstanding payments.
 
-    Args:
-        database_lock (bool): True if the database lock is enabled.
-        season (str): The hockey season, usually the calendar year.
-
     Retuns: None
     """
     _, col2 = st.columns([3, 7])
