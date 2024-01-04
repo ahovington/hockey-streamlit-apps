@@ -101,7 +101,7 @@ def GameResults() -> None:
             with col3.container():
                 st.write("")
                 _, middle, _ = st.columns([1, 1, 1])
-                middle.image("./assets/wests.png", use_column_width=True)
+                middle.image("./assets/wests.png", width=20)
             # with col4.container():
             #     st.write("")
             #     st.markdown(centered_text("Team", title_size), unsafe_allow_html=True)
@@ -160,7 +160,7 @@ def GameResults() -> None:
                 _, middle, _ = st.columns([1, 1, 1])
                 middle.image(
                     assets.get(row["opposition"], "./assets/default.jpeg"),
-                    use_column_width=True,
+                    width=20,
                 )
 
 
