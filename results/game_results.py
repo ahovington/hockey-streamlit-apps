@@ -1,7 +1,6 @@
 from typing import Optional
-import streamlit as st
-import datetime as dt
 import pandas as pd
+import streamlit as st
 
 from utils import read_data
 
@@ -11,7 +10,11 @@ def GameResults() -> None:
 
     Retuns: None
     """
-    _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1])
+    TITLE_SIZE = 6
+    METRIC_SIZE = 4
+    IMAGE_WIDTH = 60
+
+    _, col2, col3, col4, col5 = st.columns([3, 2, 2, 2, 1])
     season = col2.selectbox("Season", ["2023", "2024"], placeholder="Select season...")
     team = col3.selectbox(
         "Team",
@@ -25,6 +28,7 @@ def GameResults() -> None:
         index=None,
         placeholder="Select round...",
     )
+    html_text_colour = col5.selectbox("Table text colour", ["black", "white"])
     if not season:
         st.warning("Pick a season from dropdown.")
         return
@@ -64,103 +68,88 @@ def GameResults() -> None:
     }
 
     with st.expander("Show full results table", expanded=False):
-        st.dataframe(game_results, hide_index=True, use_container_width=True)
+        _results = game_results.drop(columns=["team", "grade", "finals"])
+        st.dataframe(_results, hide_index=True, use_container_width=True)
 
     centered_text = (
-        lambda x, s: f"""<h{s} style='text-align: center; color: black;'>{ x }</h{s}>"""
+        lambda x, s: f"""<h{s} style='text-align: center; color: { html_text_colour };'>{ x }</h{s}>"""
     )
-    title_size = 6
-    metric_size = 4
     for _, row in game_results.iterrows():
         with st.container(border=True):
-            # col1, col2, col3, col4, col5, col6, col7, col8, col9, col10 = st.columns(
-            #     [1, 0.1, 1, 1, 1, 2, 1, 1, 1, 0.1]
-            # )
-            col1, col2, col3, col5, col7, col9, _ = st.columns(
-                [1, 0.05, 1, 1, 1, 1, 0.05]
+            _, middle, _ = st.columns(3)
+            if not game_round:
+                middle.markdown(
+                    centered_text(f"""Round: { row["round"] }""", TITLE_SIZE),
+                    unsafe_allow_html=True,
+                )
+            if not team:
+                middle.markdown(
+                    centered_text(
+                        f"""Grade: { row["grade"] } - { row["start_ts"] }""", TITLE_SIZE
+                    ),
+                    unsafe_allow_html=True,
+                )
+            middle.markdown(
+                centered_text(row["location_name"], TITLE_SIZE),
+                unsafe_allow_html=True,
             )
+            middle.markdown(
+                centered_text(row["field"], TITLE_SIZE), unsafe_allow_html=True
+            )
+            # st.write("")
+
+            col1, col2, col3, col4 = st.columns([1, 0.5, 0.5, 1])
+
             with col1.container():
-                st.write("")
-                co1, col2 = st.columns([1, 1])
-
-                if not game_round:
-                    co1.markdown(
-                        centered_text("Round", title_size), unsafe_allow_html=True
-                    )
-                    co1.markdown(
-                        centered_text(row["round"], metric_size), unsafe_allow_html=True
-                    )
-                if not team:
-                    col2.markdown(
-                        centered_text("Grade", title_size), unsafe_allow_html=True
-                    )
-                    col2.markdown(
-                        centered_text(row["grade"], metric_size), unsafe_allow_html=True
-                    )
-
-            with col3.container():
-                st.write("")
+                # st.write("")
                 _, middle, _ = st.columns([1, 1, 1])
-                middle.image("./assets/wests.png", width=20)
+                middle.image("./assets/wests.png", width=IMAGE_WIDTH)
             # with col4.container():
             #     st.write("")
-            #     st.markdown(centered_text("Team", title_size), unsafe_allow_html=True)
+            #     st.markdown(centered_text("Team", TITLE_SIZE), unsafe_allow_html=True)
             #     if not team:
             #         st.markdown(
-            #             centered_text(row["team_name"], metric_size),
+            #             centered_text(row["team_name"], METRIC_SIZE),
             #             unsafe_allow_html=True,
             #         )
             #     else:
             #         st.markdown(
-            #             centered_text(row["team"], metric_size), unsafe_allow_html=True
+            #             centered_text(row["team"], METRIC_SIZE), unsafe_allow_html=True
             #         )
-            with col5.container():
-                st.write("")
+            with col2.container():
+                # st.write("")
                 st.markdown(
-                    centered_text("Goals for", title_size), unsafe_allow_html=True
+                    centered_text("Goals for", TITLE_SIZE), unsafe_allow_html=True
                 )
                 st.markdown(
-                    centered_text(row["goals_for"], metric_size), unsafe_allow_html=True
+                    centered_text(row["goals_for"], METRIC_SIZE), unsafe_allow_html=True
                 )
 
-            # with col6.container():
-            #     st.markdown(
-            #         centered_text(row["start_ts"], title_size), unsafe_allow_html=True
-            #     )
-            #     st.markdown(
-            #         centered_text(row["location_name"], title_size),
-            #         unsafe_allow_html=True,
-            #     )
-            #     st.markdown(
-            #         centered_text(row["field"], title_size), unsafe_allow_html=True
-            #     )
-            #     st.write("")
-
-            with col7.container():
-                st.write("")
+            with col3.container():
+                # st.write("")
                 st.markdown(
-                    centered_text("Goals against", title_size), unsafe_allow_html=True
+                    centered_text("Goals against", TITLE_SIZE), unsafe_allow_html=True
                 )
                 st.markdown(
-                    centered_text(row["goals_against"], metric_size),
+                    centered_text(row["goals_against"], METRIC_SIZE),
                     unsafe_allow_html=True,
                 )
 
             # with col8.container():
             #     st.write("")
             #     st.markdown(
-            #         centered_text("Opposition", title_size), unsafe_allow_html=True
+            #         centered_text("Opposition", TITLE_SIZE), unsafe_allow_html=True
             #     )
             #     st.markdown(
-            #         centered_text(row["opposition"], metric_size),
+            #         centered_text(row["opposition"], METRIC_SIZE),
             #         unsafe_allow_html=True,
             #     )
-            with col9.container():
-                st.write("")
+            with col4.container():
+                # st.write("")
                 _, middle, _ = st.columns([1, 1, 1])
                 middle.image(
                     assets.get(row["opposition"], "./assets/default.jpeg"),
-                    width=20,
+                    width=IMAGE_WIDTH,
                 )
 
 
