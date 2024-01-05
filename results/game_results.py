@@ -77,56 +77,29 @@ def GameResults() -> None:
     for _, row in game_results.iterrows():
         with st.container(border=True):
             _, middle, _ = st.columns(3)
-            if not game_round:
-                middle.markdown(
-                    centered_text(f"""Round: { row["round"] }""", TITLE_SIZE),
-                    unsafe_allow_html=True,
-                )
-            if not team:
-                middle.markdown(
-                    centered_text(
-                        f"""Grade: { row["grade"] } - { row["start_ts"] }""", TITLE_SIZE
-                    ),
-                    unsafe_allow_html=True,
-                )
             middle.markdown(
-                centered_text(row["location_name"], TITLE_SIZE),
+                centered_text(
+                    f"""{ row["grade"] } - Round { row["round"] }""", TITLE_SIZE
+                ),
                 unsafe_allow_html=True,
             )
-            middle.markdown(
-                centered_text(row["field"], TITLE_SIZE), unsafe_allow_html=True
-            )
-            # st.write("")
-
             col1, col2, col3, col4 = st.columns([1, 0.5, 0.5, 1])
 
             with col1.container():
-                # st.write("")
-                _, middle, _ = st.columns([1, 1, 1])
-                middle.image("./assets/wests.png", width=IMAGE_WIDTH)
-            # with col4.container():
-            #     st.write("")
-            #     st.markdown(centered_text("Team", TITLE_SIZE), unsafe_allow_html=True)
-            #     if not team:
-            #         st.markdown(
-            #             centered_text(row["team_name"], METRIC_SIZE),
-            #             unsafe_allow_html=True,
-            #         )
-            #     else:
-            #         st.markdown(
-            #             centered_text(row["team"], METRIC_SIZE), unsafe_allow_html=True
-            #         )
+                first, middle, last = st.columns(3)
+                middle.image(
+                    "./assets/wests.png",
+                    width=IMAGE_WIDTH
+                    # use_column_width=True,
+                )
             with col2.container():
-                # st.write("")
                 st.markdown(
                     centered_text("Goals for", TITLE_SIZE), unsafe_allow_html=True
                 )
                 st.markdown(
                     centered_text(row["goals_for"], METRIC_SIZE), unsafe_allow_html=True
                 )
-
             with col3.container():
-                # st.write("")
                 st.markdown(
                     centered_text("Goals against", TITLE_SIZE), unsafe_allow_html=True
                 )
@@ -134,22 +107,12 @@ def GameResults() -> None:
                     centered_text(row["goals_against"], METRIC_SIZE),
                     unsafe_allow_html=True,
                 )
-
-            # with col8.container():
-            #     st.write("")
-            #     st.markdown(
-            #         centered_text("Opposition", TITLE_SIZE), unsafe_allow_html=True
-            #     )
-            #     st.markdown(
-            #         centered_text(row["opposition"], METRIC_SIZE),
-            #         unsafe_allow_html=True,
-            #     )
             with col4.container():
-                # st.write("")
-                _, middle, _ = st.columns([1, 1, 1])
+                _, middle, _ = st.columns(3)
                 middle.image(
                     assets.get(row["opposition"], "./assets/default.jpeg"),
                     width=IMAGE_WIDTH,
+                    # use_column_width=True,
                 )
 
 
@@ -181,7 +144,11 @@ def results_data(
             t.team || ' - ' || t.grade as team_name,
             g.season,
             g.round,
-            l.name as location_name,
+            case
+                when l.name = 'Newcastle International Hockey Centre'
+                then 'NIHC'
+                else l.name
+            end as location_name,
             l.field,
             g.finals,
             g.opposition,
