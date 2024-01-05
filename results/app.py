@@ -8,7 +8,7 @@ if __name__ == "__main__":
     st.set_page_config(
         page_title="Results App Newcastle West Hockey",
         page_icon="https://cdn.revolutionise.com.au/cups/whc/files/ptejzkfy3k8qvtlg.ico",
-        layout="wide",
+        layout="centered",
         initial_sidebar_state="collapsed",
     )
 
