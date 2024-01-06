@@ -1,7 +1,7 @@
 import os
 import string
 import random
-from typing import Any
+from typing import Any, Optional
 import datetime as dt
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -23,6 +23,30 @@ config = Config(
 )
 
 engine = create_engine(config.database.db_url())
+
+asset_url_stem = "https://cdn.revolutionise.com.au/logos/"
+asset_norths = "https://scontent-syd2-1.xx.fbcdn.net/v/t39.30808-6/303108111_594953908808882_8195829583102730483_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=efb6e6&_nc_ohc=3mXcO3Igh1oAX92MBFS&_nc_ht=scontent-syd2-1.xx&oh=00_AfAJideVNofqudUjcWqNERY5ZCgdILdeiG3FHI1F-6V6hg&oe=659D6046"
+assets = {
+    "4thGreen": f"{ asset_url_stem }tqbgdyotasa2pwz4.png",
+    "4thRed": f"{ asset_url_stem }tqbgdyotasa2pwz4.png",
+    "West Green": f"{ asset_url_stem }tqbgdyotasa2pwz4.png",
+    "West Red": f"{ asset_url_stem }tqbgdyotasa2pwz4.png",
+    "West": f"{ asset_url_stem }tqbgdyotasa2pwz4.png",
+    "Port Stephens": f"{ asset_url_stem }lilbc4vodqtkx3uq.jpg",
+    "Souths": f"{ asset_url_stem }ktxvg5solvqxq8yv.jpg",
+    "Tigers": f"{ asset_url_stem }ksbq9xvnjatt1drb.png",
+    "Tiger": f"{ asset_url_stem }ksbq9xvnjatt1drb.png",
+    "Maitland": f"{ asset_url_stem }gfnot4z2fginovwo.png",
+    "University": f"{ asset_url_stem }3eo6ghaoxwyblbhv.jpg",
+    "University Trains": f"{ asset_url_stem }3eo6ghaoxwyblbhv.jpg",
+    "Norths Dark": asset_norths,
+    "Norths Light": asset_norths,
+    "Norths": asset_norths,
+    "North": asset_norths,
+    "Gosford": f"{ asset_url_stem }4nymemn5sfvawrqu.png",
+    "Crusaders": f"{ asset_url_stem }p4ktpeyrau8auvro.png",
+    "Colts": f"{ asset_url_stem }nuopppokzejl0im6.png",
+}
 
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits) -> str:
@@ -177,3 +201,68 @@ def calculate_date_interval(
     if date_filter:
         return (date_start.strftime("%Y%m%d"), date_end.strftime("%Y%m%d"))
     return (date_start.strftime("%d %B"), date_end.strftime("%d %B"))
+
+
+def results_data(
+    season: str, team: Optional[str] = None, game_round: Optional[str] = None
+) -> pd.DataFrame:
+    """Extact the outstanding club fees.
+
+    Args:
+        season (str): The hockey season, usually the calendar year.
+        team (str, optional): The teams name.
+        game_round (str, optional): The round of the season.
+
+    Retuns:
+        pd.DataFrame: The results of the query.
+    """
+    filters = ["where", f"g.season = '{ season }'"]
+    if team:
+        filters.append("and")
+        filters.append(f"t.team || ' - ' || t.grade = '{ team }'")
+    if game_round:
+        filters.append("and")
+        filters.append(f"g.round = '{ game_round }'")
+    df = read_data(
+        f"""
+        select
+            g.id,
+            t.team,
+            t.grade,
+            t.team || ' - ' || t.grade as team_name,
+            g.season,
+            g.round,
+            case
+                when l.name = 'Newcastle International Hockey Centre'
+                then 'NIHC'
+                else l.name
+            end as location_name,
+            l.field,
+            g.finals,
+            case
+                when g.opposition = '4thGreen' then 'West Green'
+                when g.opposition = '4thRed' then 'West Red'
+                else g.opposition 
+            end as opposition,
+            g.start_ts,
+            g.goals_for,
+            g.goals_against
+        from games as g
+        left join teams as t
+        on g.team_id = t.id
+        left join locations as l
+        on g.location_id = l.id
+        { " ".join(filters) }
+        """
+    )
+    df.loc[:, "goals_for"] = (
+        df.loc[:, "goals_for"].replace("", 0).astype(float).astype(int)
+    )
+    df.loc[:, "goals_against"] = (
+        df.loc[:, "goals_against"].replace("", 0).astype(float).astype(int)
+    )
+    df.loc[df["goals_for"] > df["goals_against"], "result"] = "Win"
+    df.loc[df["goals_for"] < df["goals_against"], "result"] = "Loss"
+    df.loc[df["goals_for"] == df["goals_against"], "result"] = "Draw"
+
+    return df
