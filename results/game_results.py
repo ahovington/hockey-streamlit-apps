@@ -1,6 +1,8 @@
+from typing import Optional
+import pandas as pd
 import streamlit as st
 
-from utils import read_data, results_data, assets
+from utils import read_data, assets
 
 
 def GameResults() -> None:
@@ -30,6 +32,7 @@ def GameResults() -> None:
         st.warning("Pick either a team or round from dropdown.")
         return
 
+    # Show filters applied
     filters_applied = []
     if game_round:
         filters_applied.append(f"Round: { game_round }")
@@ -40,12 +43,15 @@ def GameResults() -> None:
         divider="green",
     )
 
-    game_results = results_data(season, team, game_round)
+    # load data
+    game_results = game_results_data(season, team, game_round)
 
+    # show raw results table
     with st.expander("Show full results table", expanded=False):
         _results = game_results.drop(columns=["id", "team", "grade", "finals"])
         st.dataframe(_results, hide_index=True, use_container_width=True)
 
+    # present results
     for _, row in game_results.iterrows():
         if row["opposition"] == "BYE":
             continue
@@ -109,3 +115,71 @@ def results_layout(
         """,
         unsafe_allow_html=True,
     )
+
+
+def game_results_data(
+    season: str, team: Optional[str] = None, game_round: Optional[str] = None
+) -> pd.DataFrame:
+    """Extact the outstanding club fees.
+
+    Args:
+        season (str): The hockey season, usually the calendar year.
+        team (str, optional): The teams name.
+        game_round (str, optional): The round of the season.
+
+    Retuns:
+        pd.DataFrame: The results of the query.
+    """
+    filters = ["where", f"g.season = '{ season }'"]
+    if team:
+        filters.append("and")
+        filters.append(f"t.team || ' - ' || t.grade = '{ team }'")
+    if game_round:
+        filters.append("and")
+        filters.append(f"g.round = '{ game_round }'")
+    df = read_data(
+        f"""
+        select
+            g.id,
+            t.team,
+            t.grade,
+            t.team || ' - ' || t.grade as team_name,
+            g.season,
+            g.round,
+            case
+                when l.name = 'Newcastle International Hockey Centre'
+                then 'NIHC'
+                else l.name
+            end as location_name,
+            l.field,
+            g.finals,
+            case
+                when g.opposition = '4thGreen' then 'West Green'
+                when g.opposition = '4thRed' then 'West Red'
+                else g.opposition 
+            end as opposition,
+            g.start_ts,
+            g.goals_for,
+            g.goals_against
+        from games as g
+        left join teams as t
+        on g.team_id = t.id
+        left join locations as l
+        on g.location_id = l.id
+        { " ".join(filters) }
+        order by
+            t.team_order,
+            g.round
+        """
+    )
+    df.loc[:, "goals_for"] = (
+        df.loc[:, "goals_for"].replace("", 0).astype(float).astype(int)
+    )
+    df.loc[:, "goals_against"] = (
+        df.loc[:, "goals_against"].replace("", 0).astype(float).astype(int)
+    )
+    df.loc[df["goals_for"] > df["goals_against"], "result"] = "Win"
+    df.loc[df["goals_for"] < df["goals_against"], "result"] = "Loss"
+    df.loc[df["goals_for"] == df["goals_against"], "result"] = "Draw"
+
+    return df
