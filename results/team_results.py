@@ -34,15 +34,16 @@ def TeamResults() -> None:
                 row["loss"],
                 row["draw"],
                 (row["win"] * 2 + row["draw"]),
-                f"""{ (row["win"] * 2 + row["draw"]) / (row["games_played"] * 2) :.2%}""",
-                (row["goals_for"] - row["goals_against"]),
             )
             with st.expander("More detail"):
-                st.warning("Not fully implemented")
-                col1, col2, _, _, _ = st.columns(5)
-                col1.metric("Goals for", row["goals_for"])
-                col2.metric("Goals against", row["goals_against"])
+                team_detail_layout(
+                    row["goals_for"],
+                    row["goals_against"],
+                    (row["goals_for"] - row["goals_against"]),
+                    f"""{ (row["win"] * 2 + row["draw"]) / (row["games_played"] * 2) :.2%}""",
+                )
 
+                st.warning("Not fully implemented")
                 st.write("Top Goal Scorers")
                 # Data for the table (replace with your actual data)
                 data = [
@@ -69,10 +70,8 @@ def team_layout(
     losses: int,
     draws: int,
     points: int,
-    points_percentage: float,
-    goal_difference: int,
-    title_size=18,
-    metric_size=36,
+    title_size: int = 18,
+    metric_size: int = 36,
 ):
     return st.markdown(
         f"""
@@ -101,13 +100,38 @@ def team_layout(
                 <p><span style="font-size: { title_size }px;">Points</p>
                 <p><strong><span style="font-size: { metric_size }px;">{ points }</strong></p>
             </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def team_detail_layout(
+    goals_for: int,
+    goals_againt: int,
+    goal_difference: int,
+    points_percentage: str,
+    title_size=18,
+    metric_size=36,
+):
+    return st.markdown(
+        f"""
+        <div style="display: flex; justify-content: space-around; align-items: center; line-height: 1.0;">
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Points percentage</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ points_percentage }</strong></p>
+                <p><span style="font-size: { title_size }px;">Goals for</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ goals_for }</strong></p>
             </div>
+            <div style="text-align: center;">
+                <p><span style="font-size: { title_size }px;">Goals against</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ goals_againt }</strong></p>
+            </div>    
             <div style="text-align: center;">
                 <p><span style="font-size: { title_size }px;">Goal difference</p>
                 <p><strong><span style="font-size: { metric_size }px;">{ goal_difference }</strong></p>
+            </div>
+            <div style="text-align: center;">
+                <p><span style="font-size: { title_size }px;">Points percentage</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ points_percentage }</strong></p>
             </div>
         </div>
         """,
