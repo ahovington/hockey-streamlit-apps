@@ -28,7 +28,7 @@ def TeamResults() -> None:
     for _, row in team_results.iterrows():
         with st.container(border=True):
             team_layout(
-                row["grade"],
+                row["team_name"],
                 row["games_played"],
                 row["win"],
                 row["loss"],
@@ -64,7 +64,7 @@ def TeamResults() -> None:
 
 
 def team_layout(
-    grade: str,
+    team_name: str,
     games_played: int,
     wins: int,
     losses: int,
@@ -75,11 +75,10 @@ def team_layout(
 ):
     return st.markdown(
         f"""
+        <div style="text-align: center; line-height: 1.0;">
+            <p style="font-size: 18px;"><strong>{ team_name } Grade</strong></p>
+        </div>
         <div style="display: flex; justify-content: space-around; align-items: center; line-height: 1.0;">
-            <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Grade</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ grade }</strong></p>
-            </div>
             <div style="text-align: center;">
                 <p><span style="font-size: { title_size }px;">Games Played</p>
                 <p><strong><span style="font-size: { metric_size }px;">{ games_played }</strong></p>
@@ -112,7 +111,7 @@ def team_detail_layout(
     goal_difference: int,
     points_percentage: str,
     title_size=18,
-    metric_size=36,
+    metric_size=30,
 ):
     return st.markdown(
         f"""

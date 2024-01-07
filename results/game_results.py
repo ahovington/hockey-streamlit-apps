@@ -14,8 +14,7 @@ def GameResults() -> None:
     season = col2.selectbox("Season", ["2023", "2024"], placeholder="Select season...")
     team = col3.selectbox(
         "Team",
-        read_data("select team || ' - ' || grade from teams"),
-        index=None,
+        read_data("select team || ' - ' || grade from teams order by team_order"),
         placeholder="Select team...",
     )
     game_round = col4.selectbox(
