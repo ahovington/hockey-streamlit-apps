@@ -9,7 +9,7 @@ def TeamResults() -> None:
 
     Retuns: None
     """
-    _, col2, col3, col4, col5 = st.columns([3, 2, 2, 2, 1], gap="small")
+    _, col2, _, _, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     season = col2.selectbox("Season", ["2023", "2024"], placeholder="Select season...")
     if not season:
         st.warning("Pick a season from dropdown.")
@@ -21,42 +21,98 @@ def TeamResults() -> None:
     )
 
     team_results = team_results_data(season)
+    if not team_results.shape[0]:
+        st.warning(f"No results found for season { season }")
+        return
 
     for _, row in team_results.iterrows():
         with st.container(border=True):
-            col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
-            col1.metric("Grade", row["grade"])
-            col2.metric("Games Played", row["games_played"])
-            col3.metric("Wins", row["win"])
-            col4.metric("Losses", row["loss"])
-            col5.metric("Draws", row["draw"])
-            col6.metric(
-                "Points",
-                f"""{ (row["win"] * 2 + row["draw"])}""",
-            )
-            col7.metric(
-                "Points percentage",
+            team_layout(
+                row["grade"],
+                row["games_played"],
+                row["win"],
+                row["loss"],
+                row["draw"],
+                (row["win"] * 2 + row["draw"]),
                 f"""{ (row["win"] * 2 + row["draw"]) / (row["games_played"] * 2) :.2%}""",
-            )
-            col8.metric(
-                "Goals difference",
-                row["goals_for"] - row["goals_against"],
+                (row["goals_for"] - row["goals_against"]),
             )
             with st.expander("More detail"):
-                st.warning("Not fully yet implemented")
-                col1, col2, col3, col4, _ = st.columns(5)
+                st.warning("Not fully implemented")
+                col1, col2, _, _, _ = st.columns(5)
                 col1.metric("Goals for", row["goals_for"])
                 col2.metric("Goals against", row["goals_against"])
-                with col3.container():
-                    st.write("Top goal scores")
-                    st.write("1. Name, Goals 0")
-                    st.write("2. Name, Goals 0")
-                    st.write("3. Name, Goals 0")
-                with col4.container():
-                    st.write("Most games played")
-                    st.write("1. Name, Games 0")
-                    st.write("2. Name, Games 0")
-                    st.write("3. Name, Games 0")
+
+                st.write("Top Goal Scorers")
+                # Data for the table (replace with your actual data)
+                data = [
+                    {"Name": "John Doe", "Goals": 15},
+                    {"Name": "Jane Smith", "Goals": 12},
+                    # Add more rows as needed
+                ]
+                st.table(data)
+
+                st.write("Most Points")
+                # Data for the table (replace with your actual data)
+                data = [
+                    {"Name": "John Doe", "Points": 15},
+                    {"Name": "Jane Smith", "Points": 12},
+                    # Add more rows as needed
+                ]
+                st.table(data)
+
+
+def team_layout(
+    grade: str,
+    games_played: int,
+    wins: int,
+    losses: int,
+    draws: int,
+    points: int,
+    points_percentage: float,
+    goal_difference: int,
+    title_size=18,
+    metric_size=36,
+):
+    return st.markdown(
+        f"""
+        <div style="display: flex; justify-content: space-around; align-items: center; line-height: 1.0;">
+            <div style="text-align: center;">
+                <p><span style="font-size: { title_size }px;">Grade</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ grade }</strong></p>
+            </div>
+            <div style="text-align: center;">
+                <p><span style="font-size: { title_size }px;">Games Played</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ games_played }</strong></p>
+            </div>
+            <div style="text-align: center;">
+                <p><span style="font-size: { title_size }px;">Wins</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ wins }</strong></p>
+            </div>
+            <div style="text-align: center;">
+                <p><span style="font-size: { title_size }px;">Losses</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ losses }</strong></p>
+            </div>
+            <div style="text-align: center;">
+                <p><span style="font-size: { title_size }px;">Draws</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ draws }</strong></p>
+            </div>
+            <div style="text-align: center;">
+                <p><span style="font-size: { title_size }px;">Points</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ points }</strong></p>
+            </div>
+            <div style="text-align: center;">
+                <p><span style="font-size: { title_size }px;">Points percentage</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ points_percentage }</strong></p>
+            </div>
+            <div style="text-align: center;">
+                <p><span style="font-size: { title_size }px;">Goal difference</p>
+                <p><strong><span style="font-size: { metric_size }px;">{ goal_difference }</strong></p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def team_results_data(season: str) -> pd.DataFrame:

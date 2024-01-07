@@ -46,6 +46,10 @@ def GameResults() -> None:
     # load data
     game_results = game_results_data(season, team, game_round)
 
+    if not game_results.shape[0]:
+        st.warning(f"""No results found for for { ", ".join(filters_applied) }""")
+        return
+
     # show raw results table
     with st.expander("Show full results table", expanded=False):
         _results = game_results.drop(columns=["id", "team", "grade", "finals"])
@@ -77,11 +81,11 @@ def results_layout(
     location: str,
     field: str,
     image1_url: str,
-    team1_name: int,
+    team1_name: str,
     team1_score: int,
     image2_url: str,
-    team2_score,
-    team2_name,
+    team2_score: int,
+    team2_name: str,
 ):
     return st.markdown(
         f"""
@@ -160,7 +164,10 @@ def game_results_data(
             end as opposition,
             g.start_ts,
             g.goals_for,
-            g.goals_against
+            g.goals_against,
+            g.goals_for > g.goals_against as win,
+            g.goals_for < g.goals_against as loss,
+            g.goals_for = g.goals_against as draw
         from games as g
         left join teams as t
         on g.team_id = t.id
@@ -178,8 +185,4 @@ def game_results_data(
     df.loc[:, "goals_against"] = (
         df.loc[:, "goals_against"].replace("", 0).astype(float).astype(int)
     )
-    df.loc[df["goals_for"] > df["goals_against"], "result"] = "Win"
-    df.loc[df["goals_for"] < df["goals_against"], "result"] = "Loss"
-    df.loc[df["goals_for"] == df["goals_against"], "result"] = "Draw"
-
     return df
