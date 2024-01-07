@@ -1,10 +1,8 @@
-import datetime as dt
-import numpy as np
 import pandas as pd
 import streamlit as st
 import altair as alt
 
-from utils import read_data
+from utils import read_data, finacial_string_formatting
 
 
 def ClubFeesOverview() -> None:
@@ -26,27 +24,36 @@ def ClubFeesOverview() -> None:
     if season:
         _invoices = invoices[invoices["season"] == season]
     _invoices = _invoices.drop(columns=["season"])
-
+    paid_on_time = _invoices[_invoices["amount"] > 0].drop_duplicates(
+        subset=["registration_id"]
+    )
     # Headline statistics
     col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
     col1.metric(
         "Fees collected",
-        _invoices[_invoices["status"] == "PAID"]["total_amount"].sum(),
-    )
-    paid_on_time = _invoices[_invoices["amount"] > 0]
-    col2.metric(
-        "% paid on time",
-        np.round(
-            (paid_on_time["paid_early"].sum() / paid_on_time.shape[0]) * 100,
-            2,
+        finacial_string_formatting(
+            _invoices[_invoices["status"] == "PAID"]["total_amount"].sum()
         ),
+    )
+    col2.metric(
+        "Paid on time",
+        f"""
+            { paid_on_time["paid_early"].sum() / paid_on_time.shape[0] :.1%}
+        """,
     )
     col3.metric(
         "Net amount outstanding",
-        _invoices[_invoices["status"] == "AUTHORISED"]["total_amount"].sum(),
+        finacial_string_formatting(
+            _invoices[_invoices["status"] == "AUTHORISED"]["total_amount"].sum()
+        ),
     )
-    col4.metric("Discounts applied", _invoices["discount"].sum())
-    col5.metric("Per game adjustments applied", _invoices["per_game_adjustment"].sum())
+    col4.metric(
+        "Discounts applied", finacial_string_formatting(_invoices["discount"].sum())
+    )
+    col5.metric(
+        "Per game adjustments applied",
+        finacial_string_formatting(_invoices["per_game_adjustment"].sum()),
+    )
 
     # Timeseries of collected fees
     st.subheader("Fees collected by month", divider="green")
@@ -136,7 +143,9 @@ def invoice_data() -> pd.DataFrame:
     date_cols = ["due_date", "fully_paid_date", "fully_paid_month"]
     for date_col in date_cols:
         df.loc[:, date_col] = pd.to_datetime(df.loc[:, date_col], errors="coerce")
-    df.loc[:, "paid_early"] = df["due_date"] >= df["fully_paid_date"]
+    df.loc[:, "paid_early"] = (df["due_date"] >= df["fully_paid_date"]) | df[
+        "on_payment_plan"
+    ]
     df = df.drop(columns=["lines"])
     return df
 
