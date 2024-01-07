@@ -40,7 +40,7 @@ def TeamResults() -> None:
                     row["goals_for"],
                     row["goals_against"],
                     (row["goals_for"] - row["goals_against"]),
-                    f"""{ (row["win"] * 2 + row["draw"]) / (row["games_played"] * 2) :.2%}""",
+                    f"""{ (row["win"] * 2 + row["draw"]) / (row["games_played"] * 2) :.1%}""",
                 )
 
                 st.warning("Not fully implemented")
@@ -70,8 +70,8 @@ def team_layout(
     losses: int,
     draws: int,
     points: int,
-    title_size: int = 18,
-    metric_size: int = 36,
+    title_size: int = 16,
+    metric_size: int = 32,
 ):
     return st.markdown(
         f"""
@@ -80,7 +80,7 @@ def team_layout(
         </div>
         <div style="display: flex; justify-content: space-around; align-items: center; line-height: 1.0;">
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Games Played</p>
+                <p><span style="font-size: { title_size }px;">Games</p>
                 <p><strong><span style="font-size: { metric_size }px;">{ games_played }</strong></p>
             </div>
             <div style="text-align: center;">
@@ -110,8 +110,8 @@ def team_detail_layout(
     goals_againt: int,
     goal_difference: int,
     points_percentage: str,
-    title_size=18,
-    metric_size=30,
+    title_size=12,
+    metric_size=24,
 ):
     return st.markdown(
         f"""

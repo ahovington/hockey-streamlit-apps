@@ -14,12 +14,15 @@ def GameResults() -> None:
     season = col2.selectbox("Season", ["2023", "2024"], placeholder="Select season...")
     team = col3.selectbox(
         "Team",
-        read_data("select team || ' - ' || grade from teams order by team_order"),
+        read_data(
+            "select team || ' - ' || grade as team from teams order by team_order"
+        ),
+        index=None,
         placeholder="Select team...",
     )
     game_round = col4.selectbox(
         "Round",
-        read_data("select distinct round from games"),
+        round_filter_data(),
         index=None,
         placeholder="Select round...",
     )
@@ -118,6 +121,25 @@ def results_layout(
         """,
         unsafe_allow_html=True,
     )
+
+
+def round_filter_data():
+    df = read_data(
+        """
+        select
+            distinct
+            round,
+            case
+                when round = 'SF1' then '30'
+                when round = 'PF1' then '40'
+                when round = 'GF1' then '30'
+                else round
+            end as round_order
+        from games
+        """
+    )
+    df.loc[:, "round_order"] = df.loc[:, "round_order"].astype(float)
+    return df.sort_values("round_order")["round"]
 
 
 def game_results_data(
