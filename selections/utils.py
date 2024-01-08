@@ -11,7 +11,7 @@ from config import Config
 
 
 config = Config(
-    app=Config.App(database_lock=True),
+    app=Config.App(database_lock=False),
     database=Config.Database(
         db_host=os.getenv(
             "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"
@@ -117,9 +117,9 @@ def update_data(
         )
         return
     try:
-        sql = f"""UPDATE { table } SET { column } = { value } WHERE id = '{ row_id }'"""
+        sql = f"""UPDATE { table } SET { column } = { value }, update_ts = '{ add_timestamp() }' WHERE id = '{ row_id }'"""
         if value_string_type:
-            sql = f"""UPDATE { table } SET { column } = '{ value }' WHERE id = '{ row_id }'"""
+            sql = f"""UPDATE { table } SET { column } = '{ value }', update_ts = '{ add_timestamp() }' WHERE id = '{ row_id }'"""
         with engine.connect() as session:
             # Update a record
             session.execute(text(sql))

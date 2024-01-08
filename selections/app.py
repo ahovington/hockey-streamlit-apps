@@ -5,12 +5,14 @@ from documentation import Documentation
 from grade_assignments import GradeAssignments
 from results import Results
 from selections import Selections
+from games import Games
 
 apps = {
     "Documentation": Documentation,
     "Grade Assignments": GradeAssignments,
     "Selections": Selections,
     "Results": Results,
+    # "Games": Games,
 }
 if __name__ == "__main__":
     st.set_page_config(

@@ -102,7 +102,7 @@ def Results(database_lock: bool, season: str) -> None:
 
 
 def game_data(
-    season: str, date_end: dt.datetime, date_inteval: int = 6
+    season: str, date_end: dt.datetime = None, date_inteval: int = 6
 ) -> pd.DataFrame:
     """Extact the game data for the week.
 
@@ -114,7 +114,11 @@ def game_data(
     Retuns:
         pd.DataFrame: The results of the query.
     """
-    date_start = date_end - dt.timedelta(days=date_inteval)
+    filters = [f"g.season = '{ season }'"]
+    if date_end:
+        date_start = date_end - dt.timedelta(days=date_inteval)
+        filters.append("and")
+        filters.append(f"g.start_ts between '{ date_start }' and '{ date_end }'")
     df = read_data(
         f"""
         select
@@ -128,9 +132,7 @@ def game_data(
         from games as g
         inner join teams as t
         on g.team_id = t.id
-        where
-            g.season = '{ season }'
-            and g.start_ts between '{ date_start }' and '{ date_end }'
+        where { ' '.join(filters) }
         order by
             t.team_order
         """
