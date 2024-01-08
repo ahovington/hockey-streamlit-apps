@@ -11,7 +11,7 @@ def GameResults() -> None:
 
     Retuns: None
     """
-    _, col2, col3, col4, col5 = st.columns([3, 2, 2, 2, 1], gap="small")
+    _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     season = col2.selectbox("Season", ["2023", "2024"], placeholder="Select season...")
     team = col3.selectbox(
         "Team",
@@ -29,14 +29,6 @@ def GameResults() -> None:
     )
     if not season:
         st.warning("Pick a season from dropdown.")
-        return
-
-    # show raw results calendar
-    with st.expander("Show results calendar", expanded=False):
-        results_calendar(game_results_data(season, team, game_round))
-
-    if not team and not game_round:
-        st.warning("Pick either a team or round from dropdown.")
         return
 
     # Show filters applied
@@ -57,75 +49,16 @@ def GameResults() -> None:
         st.warning(f"""No results found for for { ", ".join(filters_applied) }""")
         return
 
-    # show raw results table
-    with st.expander("Show full results table", expanded=False):
-        _results = game_results.drop(columns=["id", "team", "grade", "finals"])
-        st.dataframe(_results, hide_index=True, use_container_width=True)
+    result_views = {
+        "Tiles": results_tile,
+        "Calendar": results_calendar,
+        "Table": results_table,
+    }
 
-    # present results
-    for _, row in game_results.iterrows():
-        if row["opposition"] == "BYE":
-            continue
-        with st.container(border=True):
-            results_layout(
-                row["round"],
-                row["grade"],
-                row["location_name"],
-                row["field"],
-                assets.get(row["team"]),
-                row["team"],
-                row["goals_for"],
-                assets.get(row["opposition"]),
-                row["goals_against"],
-                row["opposition"],
-            )
-            st.write("")
+    _, col2 = st.columns([3, 7], gap="small")
+    view = col2.selectbox("Results layout", ["Tiles", "Calendar", "Table"])
 
-
-def results_layout(
-    round: str,
-    grade: str,
-    location: str,
-    field: str,
-    image1_url: str,
-    team1_name: str,
-    team1_score: int,
-    image2_url: str,
-    team2_score: int,
-    team2_name: str,
-):
-    return st.markdown(
-        f"""
-        <div style="text-align: center; line-height: 1.0;">
-            <p style="font-size: 18px;"><strong>Round { round } - { grade } Grade</strong></p>
-        </div>
-        <div style="text-align: center; line-height: 1.0;">
-            <p style="font-size: 18px;"><strong>{ location } - { field } field</strong></p>
-        </div>
-        <div style="display: flex; justify-content: space-around; align-items: center; line-height: 1.0;">
-            <div style="text-align: center;">
-                <img src="{ image1_url }" alt="West Team" width="100">
-                <p></p>
-                <p>{ team1_name }</p>
-            </div>
-            <div style="text-align: center;">
-                <p><strong><span style="font-size: 36px;">{ team1_score }</strong></p>
-            </div>
-            <div style="text-align: center;">
-                <p><strong><span style="font-size: 36px;"> - </strong></p>
-            </div>
-            <div style="text-align: center;">
-                <p><strong><span style="font-size: 36px;">{ team2_score }</strong></p>
-            </div>
-            <div style="text-align: center;">
-                <img src="{ image2_url }" alt="Opposition" width="100">
-                <p></p>
-                <p>{ team2_name }</p>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    result_views.get(view, "Tiles")(game_results)
 
 
 def round_filter_data():
@@ -207,7 +140,7 @@ def game_results_data(
         { " ".join(filters) }
         order by
             t.team_order,
-            g.round
+            g.start_ts
         """
     )
     df.loc[:, "goals_for"] = (
@@ -219,12 +152,84 @@ def game_results_data(
     return df
 
 
-def results_calendar(df: pd.DataFrame):
-    mode = st.selectbox(
-        "Calendar Mode:",
-        ("list", "Calendar"),
+def results_tile(df: pd.DataFrame):
+    """Display results in a tiled view
+
+    args:
+        df (pd.DataFrame): Dataframe with the results data.
+    """
+    # present results
+    for _, row in df.iterrows():
+        if row["opposition"] == "BYE":
+            continue
+        with st.container(border=True):
+            results_layout(
+                row["round"],
+                row["grade"],
+                row["location_name"],
+                row["field"],
+                assets.get(row["team"]),
+                row["team"],
+                row["goals_for"],
+                assets.get(row["opposition"]),
+                row["goals_against"],
+                row["opposition"],
+            )
+            st.write("")
+
+
+def results_layout(
+    round: str,
+    grade: str,
+    location: str,
+    field: str,
+    image1_url: str,
+    team1_name: str,
+    team1_score: int,
+    image2_url: str,
+    team2_score: int,
+    team2_name: str,
+):
+    return st.markdown(
+        f"""
+        <div style="text-align: center; line-height: 1.0;">
+            <p style="font-size: 18px;"><strong>Round { round } - { grade } Grade</strong></p>
+        </div>
+        <div style="text-align: center; line-height: 1.0;">
+            <p style="font-size: 18px;"><strong>{ location } - { field } field</strong></p>
+        </div>
+        <div style="display: flex; justify-content: space-around; align-items: center; line-height: 1.0;">
+            <div style="text-align: center;">
+                <img src="{ image1_url }" alt="West Team" width="100">
+                <p></p>
+                <p>{ team1_name }</p>
+            </div>
+            <div style="text-align: center;">
+                <p><strong><span style="font-size: 36px;">{ team1_score }</strong></p>
+            </div>
+            <div style="text-align: center;">
+                <p><strong><span style="font-size: 36px;"> - </strong></p>
+            </div>
+            <div style="text-align: center;">
+                <p><strong><span style="font-size: 36px;">{ team2_score }</strong></p>
+            </div>
+            <div style="text-align: center;">
+                <img src="{ image2_url }" alt="Opposition" width="100">
+                <p></p>
+                <p>{ team2_name }</p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
+
+def results_calendar(df: pd.DataFrame):
+    """Display results in a calendar list
+
+    args:
+        df (pd.DataFrame): Dataframe with the results data.
+    """
     result = {"win": "#359e23", "loss": "#a81919", "draw": "#ded70d"}
 
     game_events = []
@@ -244,47 +249,39 @@ def results_calendar(df: pd.DataFrame):
                 "end": str(row["start_ts"] + pd.DateOffset(hours=1)),
             }
         )
-
-    calendar_options = {
-        "editable": "true",
-        "navLinks": "true",
-        "selectable": "true",
+    cal_options = {
+        "initialDate": str(max(df["start_ts"])),
+        "initialView": "listMonth",
     }
+    _calendar_config(game_events, cal_options)
 
-    if mode == "Calendar":
-        calendar_options = {
-            **calendar_options,
-            "initialDate": str(max(df["start_ts"])),
-            "headerToolbar": {
-                "left": "today prev,next",
-                "center": "title",
-                "right": "dayGridDay,dayGridWeek,dayGridMonth",
-            },
-            "initialView": "timeGridWeek",
-        }
-    elif mode == "list":
-        calendar_options = {
-            **calendar_options,
-            "initialDate": str(max(df["start_ts"])),
-            "initialView": "listMonth",
-        }
 
+def _calendar_config(events: dict, options: dict):
     calendar(
-        events=game_events,
-        options=calendar_options,
+        events=events,
+        options=options,
         custom_css="""
-        .fc-event-past {
-            opacity: 0.8;
-        }
-        .fc-event-time {
-            font-style: italic;
-        }
-        .fc-event-title {
-            font-weight: 700;
-        }
-        .fc-toolbar-title {
-            font-size: 2rem;
-        }   
-        """,
-        key=mode,
+            .fc-event-past {
+                opacity: 0.8;
+            }
+            .fc-event-time {
+                font-style: italic;
+            }
+            .fc-event-title {
+                font-weight: 700;
+            }
+            .fc-toolbar-title {
+                font-size: 2rem;
+            }   
+            """,
     )
+
+
+def results_table(df: pd.DataFrame):
+    """Display results in a table
+
+    args:
+        df (pd.DataFrame): Dataframe with the results data.
+    """
+    _results = df.drop(columns=["id", "team", "grade", "finals", "win", "loss", "draw"])
+    st.dataframe(_results, hide_index=True, use_container_width=True)
