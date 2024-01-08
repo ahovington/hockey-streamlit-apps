@@ -5,3 +5,4 @@ sqlalchemy>=2.0.0,<2.1.0
 psycopg2-binary==2.9.9
 streamlit>=1.29.0,<1.30.0
 streamlit-authenticator>=0.2.3,<0.3.0
+streamlit-calendar>=1.1.0,<1.2.0

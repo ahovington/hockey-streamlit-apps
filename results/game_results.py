@@ -1,6 +1,7 @@
 from typing import Optional
 import pandas as pd
 import streamlit as st
+from streamlit_calendar import calendar
 
 from utils import read_data, assets
 
@@ -29,6 +30,10 @@ def GameResults() -> None:
     if not season:
         st.warning("Pick a season from dropdown.")
         return
+
+    # show raw results calendar
+    with st.expander("Show results calendar", expanded=False):
+        results_calendar(game_results_data(season, team, game_round))
 
     if not team and not game_round:
         st.warning("Pick either a team or round from dropdown.")
@@ -186,6 +191,11 @@ def game_results_data(
             g.start_ts,
             g.goals_for,
             g.goals_against,
+            case
+                when g.goals_for > g.goals_against then 'win'
+                when g.goals_for < g.goals_against then 'loss'
+                when g.goals_for = g.goals_against then 'draw'
+            end as result,
             g.goals_for > g.goals_against as win,
             g.goals_for < g.goals_against as loss,
             g.goals_for = g.goals_against as draw
@@ -207,3 +217,74 @@ def game_results_data(
         df.loc[:, "goals_against"].replace("", 0).astype(float).astype(int)
     )
     return df
+
+
+def results_calendar(df: pd.DataFrame):
+    mode = st.selectbox(
+        "Calendar Mode:",
+        ("list", "Calendar"),
+    )
+
+    result = {"win": "#359e23", "loss": "#a81919", "draw": "#ded70d"}
+
+    game_events = []
+    for _, row in df.iterrows():
+        game_events.append(
+            {
+                "title": (
+                    "Round "
+                    + row["round"]
+                    + ": "
+                    + row["grade"]
+                    + " vs "
+                    + row["opposition"]
+                ),
+                "color": result.get(row["result"]),
+                "start": str(row["start_ts"]),
+                "end": str(row["start_ts"] + pd.DateOffset(hours=1)),
+            }
+        )
+
+    calendar_options = {
+        "editable": "true",
+        "navLinks": "true",
+        "selectable": "true",
+    }
+
+    if mode == "Calendar":
+        calendar_options = {
+            **calendar_options,
+            "initialDate": str(max(df["start_ts"])),
+            "headerToolbar": {
+                "left": "today prev,next",
+                "center": "title",
+                "right": "dayGridDay,dayGridWeek,dayGridMonth",
+            },
+            "initialView": "timeGridWeek",
+        }
+    elif mode == "list":
+        calendar_options = {
+            **calendar_options,
+            "initialDate": str(max(df["start_ts"])),
+            "initialView": "listMonth",
+        }
+
+    calendar(
+        events=game_events,
+        options=calendar_options,
+        custom_css="""
+        .fc-event-past {
+            opacity: 0.8;
+        }
+        .fc-event-time {
+            font-style: italic;
+        }
+        .fc-event-title {
+            font-weight: 700;
+        }
+        .fc-toolbar-title {
+            font-size: 2rem;
+        }   
+        """,
+        key=mode,
+    )
