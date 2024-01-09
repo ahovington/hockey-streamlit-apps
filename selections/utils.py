@@ -11,7 +11,10 @@ from config import Config
 
 
 config = Config(
-    app=Config.App(database_lock=False),
+    app=Config.App(
+        west_logo_url="https://hockey-assets.s3.ap-southeast-1.amazonaws.com/wests.png",
+        database_lock=False,
+    ),
     database=Config.Database(
         db_host=os.getenv(
             "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"
@@ -175,5 +178,8 @@ def calculate_date_interval(
     """
     date_start = date_end - dt.timedelta(days=date_inteval)
     if date_filter:
-        return (date_start.strftime("%Y%m%d"), date_end.strftime("%Y%m%d"))
+        return (
+            date_start.strftime("%Y-%m-%d %H:%M:%S"),
+            date_end.strftime("%Y-%m-%d %H:%M:%S"),
+        )
     return (date_start.strftime("%d %B"), date_end.strftime("%d %B"))

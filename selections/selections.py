@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from utils import (
+    config,
     add_timestamp,
     calculate_date_interval,
     compare_dataframes,
@@ -28,7 +29,7 @@ def Selections(database_lock: bool, season: str) -> None:
     # Date end filter
     max_date = read_data(
         f"""
-        select max(start_ts) as max_ts
+        select max(start_ts) + interval '1 day' as max_ts
         from games
         where
             season = '{ season }'
@@ -287,7 +288,7 @@ def output_selections_table(
         return np.where(x in dup_players, f"background-color: {color};", None)
 
     col1, col2 = st.columns([3, 10])
-    col1.image("./rosella.png")
+    col1.image(config.app.west_logo_url)
     col2.title(f"West Hockey Selections, for the week ending { week_end }")
     st.dataframe(
         pivot_selections.style.applymap(

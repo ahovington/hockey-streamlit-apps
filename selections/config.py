@@ -14,6 +14,7 @@ class Config:
 
     @dataclass
     class App:
+        west_logo_url: str
         database_lock: bool = True
 
     @dataclass

@@ -8,7 +8,9 @@ from config import Config
 
 
 config = Config(
-    app=Config.App(database_lock=True),
+    app=Config.App(
+        west_logo_url="https://hockey-assets.s3.ap-southeast-1.amazonaws.com/wests.png"
+    ),
     database=Config.Database(
         db_host=os.getenv(
             "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"

@@ -1,5 +1,6 @@
 import streamlit as st
 
+from utils import config
 from auth import login, register_user, auth
 from documentation import Documentation
 from grade_assignments import GradeAssignments
@@ -17,7 +18,7 @@ apps = {
 if __name__ == "__main__":
     st.set_page_config(
         page_title="Selections App West Hockey Newcastle",
-        page_icon="https://cdn.revolutionise.com.au/cups/whc/files/ptejzkfy3k8qvtlg.ico",
+        page_icon=config.app.west_logo_url,
         layout="wide",
         initial_sidebar_state="collapsed",
     )
@@ -27,7 +28,7 @@ if __name__ == "__main__":
         season = st.selectbox("Season", ["2023", "2024"])
 
     col1, col2 = st.columns([3, 7])
-    col1.image("./assets/wests.png")
+    col1.image(config.app.west_logo_url)
     col2.title("West Hockey Newcastle Selections")
 
     authenticator = auth()

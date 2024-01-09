@@ -8,8 +8,7 @@ from config import Config
 
 config = Config(
     app=Config.App(
-        west_logo_url="https://cdn.revolutionise.com.au/logos/tqbgdyotasa2pwz4.png",
-        database_lock=True,
+        west_logo_url="https://hockey-assets.s3.ap-southeast-1.amazonaws.com/wests.png",
     ),
     database=Config.Database(
         db_host=os.getenv(
@@ -23,26 +22,25 @@ config = Config(
 
 engine = config.database.create_db_engine()
 
-asset_url_stem = "https://cdn.revolutionise.com.au/logos/"
-asset_norths = "https://scontent-syd2-1.xx.fbcdn.net/v/t39.30808-6/303108111_594953908808882_8195829583102730483_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=efb6e6&_nc_ohc=3mXcO3Igh1oAX92MBFS&_nc_ht=scontent-syd2-1.xx&oh=00_AfAJideVNofqudUjcWqNERY5ZCgdILdeiG3FHI1F-6V6hg&oe=659D6046"
+asset_url_stem = "https://hockey-assets.s3.ap-southeast-1.amazonaws.com/"
 assets = {
-    "West Green": f"{ asset_url_stem }tqbgdyotasa2pwz4.png",
-    "West Red": f"{ asset_url_stem }tqbgdyotasa2pwz4.png",
-    "West": f"{ asset_url_stem }tqbgdyotasa2pwz4.png",
-    "Port Stephens": f"{ asset_url_stem }lilbc4vodqtkx3uq.jpg",
-    "Souths": f"{ asset_url_stem }ktxvg5solvqxq8yv.jpg",
-    "Tigers": f"{ asset_url_stem }ksbq9xvnjatt1drb.png",
-    "Tiger": f"{ asset_url_stem }ksbq9xvnjatt1drb.png",
-    "Maitland": f"{ asset_url_stem }gfnot4z2fginovwo.png",
-    "University": f"{ asset_url_stem }3eo6ghaoxwyblbhv.jpg",
-    "University Trains": f"{ asset_url_stem }3eo6ghaoxwyblbhv.jpg",
-    "Norths Dark": asset_norths,
-    "Norths Light": asset_norths,
-    "Norths": asset_norths,
-    "North": asset_norths,
-    "Gosford": f"{ asset_url_stem }4nymemn5sfvawrqu.png",
-    "Crusaders": f"{ asset_url_stem }p4ktpeyrau8auvro.png",
-    "Colts": f"{ asset_url_stem }nuopppokzejl0im6.png",
+    "West Green": f"{ asset_url_stem }wests.png",
+    "West Red": f"{ asset_url_stem }wests.png",
+    "West": f"{ asset_url_stem }wests.png",
+    "University": f"{ asset_url_stem }university.jpeg",
+    "University Trains": f"{ asset_url_stem }university.jpeg",
+    "Tigers": f"{ asset_url_stem }tigers.png",
+    "Tiger": f"{ asset_url_stem }tigers.png",
+    "Souths": f"{ asset_url_stem }souths.jpeg",
+    "Port Stephens": f"{ asset_url_stem }port_stephens.jpeg",
+    "Norths Dark": f"{ asset_url_stem }norths.jpeg",
+    "Norths Light": f"{ asset_url_stem }norths.jpeg",
+    "Norths": f"{ asset_url_stem }norths.jpeg",
+    "North": f"{ asset_url_stem }norths.jpeg",
+    "Maitland": f"{ asset_url_stem }maitland.png",
+    "Gosford": f"{ asset_url_stem }gosford.png",
+    "Crusaders": f"{ asset_url_stem }crusaders.png",
+    "Colts": f"{ asset_url_stem }colts.png",
 }
 
 
