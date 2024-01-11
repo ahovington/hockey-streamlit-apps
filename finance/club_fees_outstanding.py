@@ -53,7 +53,7 @@ def invoice_data() -> pd.DataFrame:
         f"""
         select
             p.full_name,
-            i.issued_date as registration_date,
+            r.grade,
             i.due_date,
             i.amount,
             i.discount,

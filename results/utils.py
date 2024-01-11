@@ -1,8 +1,5 @@
 import os
-from typing import Any, Optional
 import pandas as pd
-from sqlalchemy import text
-import streamlit as st
 
 from config import Config
 
@@ -57,37 +54,5 @@ def read_data(sql_statement: str) -> pd.DataFrame:
     try:
         with engine.connect() as session:
             return pd.read_sql_query(sql_statement, session)
-    finally:
-        session.close()
-
-
-def create_data(
-    table: str, columns: tuple[str], values: tuple[Any], verbose: bool = False
-) -> None:
-    """Helper function to write a row of data to the database
-
-    Args:
-        table (str): The table to write to.
-        columns (tuple(str)): The columns to add a row for.
-        values (tuple(Any)): The values to write.
-        verbose (bool, optional): True to print the queries written to the database.
-
-    Returns: None
-    """
-    if config.app.database_lock:
-        st.error(
-            "A hard lock has been applied to the databases. Contact the administrator."
-        )
-        return
-    try:
-        with engine.connect() as session:
-            # Update a record
-            sql = f"""INSERT INTO { table } ({', '.join(columns) }) VALUES { values }"""
-            session.execute(text(sql))
-            # Commit changes
-            session.commit()
-        if verbose:
-            st.write(sql)
-            st.write(f"Record created successfully to { columns } = { values }")
     finally:
         session.close()

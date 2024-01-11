@@ -62,11 +62,6 @@ def update_data(
     Returns: None
     """
     # TODO: Add user to the change
-    if config.app.database_lock and table != "users":
-        st.error(
-            "A hard lock has been applied to the databases. Contact the administrator."
-        )
-        return
     try:
         sql = f"""UPDATE { table } SET { column } = { value } WHERE id = '{ row_id }'"""
         if value_string_type:

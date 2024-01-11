@@ -31,7 +31,7 @@ if __name__ == "__main__":
     col1.image(config.app.west_logo_url)
     col2.title("West Hockey Newcastle Selections")
 
-    authenticator = auth()
+    authenticator = auth(use_config=False)
     if login(authenticator):
         APP_NAME = tuple(apps.keys())[0]
         APP_NAME = col2.selectbox("Select page", tuple(apps.keys()))

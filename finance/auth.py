@@ -91,8 +91,7 @@ def auth() -> stauth.Authenticate:
             role in (
                 'admin',
                 'committee_member',
-                'team_manager',
-                'selector'
+                'collector'
             )
         """
     )
