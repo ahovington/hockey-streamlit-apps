@@ -41,6 +41,19 @@ def _reset_password(authenticator: stauth.Authenticate) -> None:
 
 def register_user(authenticator: stauth.Authenticate) -> None:
     """Register a new user."""
+    st.write(
+        "You can only create a login if you have been added to a pre-approved list of users."
+    )
+    st.write("Example inputs")
+    st.dataframe(
+        {
+            "email": "Email you registered with",
+            "username": "example",
+            "name": "example",
+            "password": "dont reuse a password!",
+            "Repeat password": "dont reuse a password!",
+        }
+    )
     if authenticator.register_user("", preauthorization=True):
         st.success("User registered successfully")
         _update_config(authenticator)
