@@ -73,6 +73,13 @@ def ClubFeesOverview() -> None:
         st.warning("No payments have been received for this period.")
 
     distinct_regos = _invoices.drop_duplicates(subset=["registration_id"])
+    distinct_regos.loc[:, "invoice_description"] = (
+        distinct_regos.loc[:, "invoice_description"]
+        .str.lower()
+        .str.replace("instalment 1 of west hockey club fees", "paid by instalments")
+        .str.replace("instalment 5 of west hockey club fees", "paid by instalments")
+        .str.replace("1st instalment", "paid by instalments")
+    )
     # player types
     st.subheader("Invoices by player type", divider="green")
     player_types = (
@@ -122,6 +129,7 @@ def invoice_data() -> pd.DataFrame:
             date_trunc('MONTH', i.fully_paid_date) as fully_paid_month,
             i.amount_paid,
             i.per_game_adjustment_applied as per_game_adjustment,
+            i.amount_credited,
             i.amount - i.discount - i.amount_credited as total_amount,
             i.on_payment_plan,
             i.lines
@@ -200,5 +208,9 @@ def get_bar_chart(
     y_col: str,
     use_container_width: bool = True,
 ):
-    chart = alt.Chart(data).mark_bar(color="green").encode(x=x_col, y=y_col)
+    chart = (
+        alt.Chart(data)
+        .mark_bar(color="green")
+        .encode(x=alt.X(x_col).sort("-y"), y=y_col)
+    )
     st.altair_chart(chart, use_container_width=use_container_width)
