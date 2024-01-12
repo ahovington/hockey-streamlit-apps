@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 
-from utils import read_data, finacial_string_formatting
+from utils import read_data, financial_string_formatting
 
 
 def ClubFeesOverview() -> None:
@@ -31,7 +31,7 @@ def ClubFeesOverview() -> None:
     col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     col1.metric(
         "Fees collected",
-        finacial_string_formatting(
+        financial_string_formatting(
             _invoices[_invoices["status"] == "PAID"]["total_amount"].sum()
         ),
     )
@@ -43,12 +43,12 @@ def ClubFeesOverview() -> None:
     )
     col3.metric(
         "Net amount outstanding",
-        finacial_string_formatting(
+        financial_string_formatting(
             _invoices[_invoices["status"] == "AUTHORISED"]["total_amount"].sum()
         ),
     )
     col4.metric(
-        "Discounts applied", finacial_string_formatting(_invoices["discount"].sum())
+        "Discounts applied", financial_string_formatting(_invoices["discount"].sum())
     )
     col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     rego_filter = ""
@@ -61,14 +61,14 @@ def ClubFeesOverview() -> None:
     col2.metric("Players invoiced", _invoices["registration_id"].nunique())
     col3.metric(
         "Average fee collected",
-        finacial_string_formatting(
+        financial_string_formatting(
             _invoices[_invoices["status"] == "PAID"]["total_amount"].sum()
             / _invoices["registration_id"].nunique()
         ),
     )
     col4.metric(
         "Per game adjustments applied",
-        finacial_string_formatting(_invoices["per_game_adjustment"].sum()),
+        financial_string_formatting(_invoices["per_game_adjustment"].sum()),
     )
 
     # Timeseries of collected fees

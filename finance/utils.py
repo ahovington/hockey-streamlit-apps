@@ -80,5 +80,5 @@ def update_data(
         session.close()
 
 
-def finacial_string_formatting(input: Any):
+def financial_string_formatting(input: Any):
     return f"""${ input :.1f}"""

@@ -2,7 +2,7 @@ import streamlit as st
 import datetime as dt
 import pandas as pd
 
-from utils import read_data, finacial_string_formatting
+from utils import read_data, financial_string_formatting
 
 
 def ClubFeesOustanding() -> None:
@@ -20,14 +20,16 @@ def ClubFeesOustanding() -> None:
     st.subheader("Overdue Club Fees", divider="green")
     overdue = _invoices[_invoices["due_date"] <= dt.datetime.now()]
     col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
-    col1.metric("Net amount", finacial_string_formatting(overdue["total_amount"].sum()))
-    col2.metric("Gross amount", finacial_string_formatting(overdue["amount"].sum()))
+    col1.metric(
+        "Net amount", financial_string_formatting(overdue["total_amount"].sum())
+    )
+    col2.metric("Gross amount", financial_string_formatting(overdue["amount"].sum()))
     col3.metric(
-        "Discounts applied", finacial_string_formatting(overdue["discount"].sum())
+        "Discounts applied", financial_string_formatting(overdue["discount"].sum())
     )
     col4.metric(
         "Per game adjustments applied",
-        finacial_string_formatting(overdue["per_game_adjustment"].sum()),
+        financial_string_formatting(overdue["per_game_adjustment"].sum()),
     )
 
     # Table of overdue fees
@@ -38,7 +40,7 @@ def ClubFeesOustanding() -> None:
     st.subheader("UPCOMING CLUB FEES", divider="green")
     upcoming = _invoices[_invoices["due_date"] > dt.datetime.now()]
     st.metric(
-        "Upcoming fees due", finacial_string_formatting(upcoming["total_amount"].sum())
+        "Upcoming fees due", financial_string_formatting(upcoming["total_amount"].sum())
     )
     st.dataframe(upcoming, hide_index=True, use_container_width=True)
 
