@@ -28,7 +28,7 @@ def ClubFeesOverview() -> None:
         subset=["registration_id"]
     )
     # Headline statistics
-    col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     col1.metric(
         "Fees collected",
         finacial_string_formatting(
@@ -50,7 +50,23 @@ def ClubFeesOverview() -> None:
     col4.metric(
         "Discounts applied", finacial_string_formatting(_invoices["discount"].sum())
     )
-    col5.metric(
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+    rego_filter = ""
+    if season:
+        rego_filter = f"where season = '{ season }'"
+    rego_count = read_data(
+        f"""select count(*) from registrations { rego_filter }"""
+    ).values
+    col1.metric("Registrations", rego_count)
+    col2.metric("Players invoiced", _invoices["registration_id"].nunique())
+    col3.metric(
+        "Average fee collected",
+        finacial_string_formatting(
+            _invoices[_invoices["status"] == "PAID"]["total_amount"].sum()
+            / _invoices["registration_id"].nunique()
+        ),
+    )
+    col4.metric(
         "Per game adjustments applied",
         finacial_string_formatting(_invoices["per_game_adjustment"].sum()),
     )
@@ -87,20 +103,29 @@ def ClubFeesOverview() -> None:
         .agg({"id": "count"})
         .reset_index()
     )
-    player_types.columns = ["player_type", "invoice_count"]
+    player_types.columns = ["fee type", "registration count"]
     get_bar_chart(
         player_types,
-        "player_type",
-        "invoice_count",
+        "fee type",
+        "registration count",
     )
 
+    # fee amounts
+    st.subheader("Invoices by fee amount", divider="green")
+    fee_amount = (
+        distinct_regos.groupby(["total_amount"]).agg({"id": "count"}).reset_index()
+    )
+    fee_amount.columns = ["fee amount", "registration count"]
+    fee_amount = fee_amount.astype({"fee amount": str, "registration count": int})
+    get_bar_chart(fee_amount, "fee amount", "registration count")
+
     # discounts taken up
-    st.subheader("Invoices by collection method", divider="green")
+    st.subheader("Invoices by discount type", divider="green")
     collection_method = (
         distinct_regos.groupby(["discount_applied"]).agg({"id": "count"}).reset_index()
     )
-    collection_method.columns = ["discount_applied", "invoice_count"]
-    get_bar_chart(collection_method, "discount_applied", "invoice_count")
+    collection_method.columns = ["discount applied", "registration count"]
+    get_bar_chart(collection_method, "discount applied", "registration count")
 
     st.subheader("Detailed invoice table", divider="green")
     st.write(_invoices)
