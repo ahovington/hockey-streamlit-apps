@@ -5,10 +5,7 @@ from utils import read_data
 
 
 def TeamResults() -> None:
-    """Display game results
-
-    Retuns: None
-    """
+    """Display game results"""
     _, col2, _, _, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     season = col2.selectbox("Season", ["2023", "2024"], placeholder="Select season...")
     if not season:

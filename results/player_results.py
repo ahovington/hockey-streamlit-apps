@@ -1,36 +1,51 @@
-"""
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player Profile</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .profile {
-            max-width: 600px;
-            margin: 0 auto;
-            text-align: center;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 50%;
-        }
-    </style>
-</head>
-<body>
+import streamlit as st
 
-    <div class="profile">
-        <img src="player-avatar.jpg" alt="Player Avatar">
-        <h1>John Doe</h1>
-        <p>Position: Forward</p>
-        <p>Team: XYZ United</p>
-        <p>Description: John Doe is a talented forward playing for XYZ United. He has exceptional skills and contributes significantly to the team's success.</p>
-    </div>
+from utils import read_data
 
-</body>
-</html>
-"""
+
+def PlayerResults() -> None:
+    """Display player results"""
+    _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
+    season = col2.selectbox(
+        "Season", ["2023", "2024"], index=None, placeholder="Select season..."
+    )
+    player_name = col3.selectbox(
+        "Player",
+        read_data("select full_name as player from players order by full_name"),
+        index=None,
+        placeholder="Select player...",
+    )
+    if not player_name:
+        st.warning("Pick a player from dropdown.")
+        return
+    st.write("")
+    st.write("")
+
+    st.markdown(
+        f"""
+        <div class="profile">
+            <style>
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }}
+            .profile {{
+                max-width: 600px;
+                margin: 0 auto;
+                text-align: center;
+            }}
+            img {{
+                max-width: 100%;
+                height: auto;
+                border-radius: 50%;
+            }}
+        </style>
+            <img src= { "https://maxfieldhockey.com/wp-content/uploads/2019/02/PlayerProfileHeadshot_Default.jpg" } alt="Player Avatar">
+            <h1>{ player_name }</h1>
+            <p>Position: Forward</p>
+            <p>Team: XYZ United</p>
+            <p>Description: { player_name } is a talented forward playing for XYZ United. He has exceptional skills and contributes significantly to the team's success.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )

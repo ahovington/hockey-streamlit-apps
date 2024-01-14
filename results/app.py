@@ -3,9 +3,14 @@ import streamlit as st
 from utils import config
 from game_results import GameResults
 from team_results import TeamResults
+from player_results import PlayerResults
 
 
-apps = {"Game results": GameResults, "Team results": TeamResults}
+apps = {
+    "Game results": GameResults,
+    "Team results": TeamResults,
+    "Player Statistics": PlayerResults,
+}
 
 if __name__ == "__main__":
     st.set_page_config(
