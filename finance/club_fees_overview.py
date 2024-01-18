@@ -12,7 +12,7 @@ def ClubFeesOverview() -> None:
     """
     _, col2 = st.columns([3, 7])
     season = col2.selectbox(
-        "Season", ["", "2023", "2024"], placeholder="Select season..."
+        "Season", ["2023", "2024"], index=1, placeholder="Select season..."
     )
     st.subheader("Club Fee Overview", divider="green")
 
@@ -128,6 +128,23 @@ def ClubFeesOverview() -> None:
     get_bar_chart(collection_method, "discount applied", "registration count")
 
     st.subheader("Detailed invoice table", divider="green")
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+    invoice_status = col1.selectbox(
+        "Status",
+        _invoices["status"].unique(),
+        index=None,
+        placeholder="Select status...",
+    )
+    invoice_type = col2.selectbox(
+        "Invoice type",
+        _invoices["invoice_description"].unique(),
+        index=None,
+        placeholder="Select invoice type...",
+    )
+    if invoice_status:
+        _invoices = _invoices[_invoices["status"] == invoice_status]
+    if invoice_type:
+        _invoices = _invoices[_invoices["invoice_description"] == invoice_type]
     st.write(_invoices)
 
 

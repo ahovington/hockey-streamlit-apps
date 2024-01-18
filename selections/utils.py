@@ -176,6 +176,7 @@ def calculate_date_interval(
     Returns:
         tuple[str, str]: The start and end date of the period.
     """
+    date_end = date_end + dt.timedelta(days=1)
     date_start = date_end - dt.timedelta(days=date_inteval)
     if date_filter:
         return (

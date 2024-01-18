@@ -50,11 +50,11 @@ def Selections(database_lock: bool, season: str) -> None:
 
     ### Generate selections table ###
     with st.expander("Preview selections", expanded=False):
+        selected = selections_output_data(season, date_filter)
         col1, _, _ = st.columns(3)
         if col1.button("Generate selections", use_container_width=True):
             st.error("Generate selections has not been implemented.")
 
-        selected = selections_output_data(season, date_filter)
         if selected.shape[0]:
             output_selections_table(
                 selected,
@@ -290,14 +290,12 @@ def output_selections_table(
     col1, col2 = st.columns([3, 10])
     col1.image(config.app.west_logo_url)
     col2.title(f"West Hockey Selections, for the week ending { week_end }")
-    st.dataframe(
+    st.table(
         pivot_selections.style.applymap(
             highlight_players_multiple_games,
             color="yellow",
             subset=(slice("GK", np.max(selected_player["selection_no"]))),
-        ),
-        use_container_width=True,
-        height=740,
+        )
     )
 
 
