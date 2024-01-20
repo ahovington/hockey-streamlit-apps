@@ -9,6 +9,7 @@ apps = {
     "Registrations": finance_app,
     "Selections": selections_app,
 }
+
 if __name__ == "__main__":
     st.set_page_config(
         page_title="Newcastle West Hockey",
@@ -21,4 +22,5 @@ if __name__ == "__main__":
         database_lock = st.toggle("Lock database", True)
         season = st.selectbox("Season", ["2023", "2024"])
         APP_NAME = st.selectbox("Select page", tuple(apps.keys()))
-        apps[APP_NAME](database_lock, season)
+
+    apps[APP_NAME](database_lock, season)
