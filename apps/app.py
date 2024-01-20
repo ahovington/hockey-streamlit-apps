@@ -19,8 +19,6 @@ if __name__ == "__main__":
     )
 
     with st.sidebar:
-        database_lock = st.toggle("Lock database", True)
-        season = st.selectbox("Season", ["2023", "2024"])
-        APP_NAME = st.selectbox("Select page", tuple(apps.keys()))
+        app_name = st.selectbox("Select page", tuple(apps.keys()))
 
-    apps[APP_NAME](database_lock, season)
+    apps[app_name]()

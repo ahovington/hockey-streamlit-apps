@@ -11,7 +11,7 @@ apps = {
 }
 
 
-def App(*args):
+def App():
     col1, col2 = st.columns([3, 7])
     col1.image(config.app.west_logo_url)
     col2.title("West Hockey Newcastle Club Fees")

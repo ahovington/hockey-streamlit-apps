@@ -17,7 +17,12 @@ apps = {
 }
 
 
-def App(database_lock: True, season: str):
+def App():
+    with st.sidebar:
+        st.subheader("", divider="green")
+        database_lock = st.toggle("Lock database", True)
+        season = st.selectbox("Season", ["2023", "2024"])
+
     col1, col2 = st.columns([3, 7])
     col1.image(config.app.west_logo_url)
     col2.title("West Hockey Newcastle Selections")
