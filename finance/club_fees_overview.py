@@ -164,16 +164,17 @@ def invoice_data() -> pd.DataFrame:
             i.status,
             i.issued_date as registration_date,
             i.due_date,
+            i.invoice_sent,
+            i.on_payment_plan,
+            i.discount_applied,
             i.amount,
             i.discount,
-            i.discount_applied,
             i.fully_paid_date,
             date_trunc('MONTH', i.fully_paid_date) as fully_paid_month,
             i.amount_paid,
             i.per_game_adjustment_applied as per_game_adjustment,
             i.amount_credited,
             i.amount - i.discount - i.amount_credited as total_amount,
-            i.on_payment_plan,
             i.lines
         from invoices as i
         inner join registrations as r
