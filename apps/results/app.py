@@ -1,9 +1,9 @@
 import streamlit as st
 
 from utils import config
-from game_results import GameResults
-from team_results import TeamResults
-from player_results import PlayerResults
+from .game_results import GameResults
+from .team_results import TeamResults
+from .player_results import PlayerResults
 
 
 apps = {
@@ -12,14 +12,8 @@ apps = {
     "Player Statistics": PlayerResults,
 }
 
-if __name__ == "__main__":
-    st.set_page_config(
-        page_title="Results App Newcastle West Hockey",
-        page_icon=config.app.west_logo_url,
-        layout="wide",
-        initial_sidebar_state="collapsed",
-    )
 
+def App(*args):
     col1, col2 = st.columns([3, 7])
     col1.image(config.app.west_logo_url)
     col2.title("West Hockey Results")

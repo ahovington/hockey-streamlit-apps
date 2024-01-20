@@ -93,52 +93,48 @@ def _update_config(authenticator: stauth.Authenticate) -> None:
         )
 
 
-def auth(use_config: bool = True) -> stauth.Authenticate:
+def auth() -> stauth.Authenticate:
     """Pass the paramaters to the authenicator.
 
     Returns:
         stauth.Authenticate: The authenicator.
     """
-    if use_config:
-        with open("selections/config.yaml", "r", encoding="utf-8") as file:
-            config = yaml.load(file, Loader=SafeLoader)
-    else:
-        users = read_data(
-            """
-            select
-                id,
-                name,
-                username,
-                email,
-                hashed_password
-            from users
-            where
-                role in (
-                    'admin',
-                    'committee_member',
-                    'team_manager',
-                    'selector'
-                )
-            """
-        )
-        config = {
-            "credentials": {
-                "usernames": {
-                    row["email"]: {
-                        "id": row["id"],
-                        "email": row["email"],
-                        "name": row["name"],
-                        "password": row["hashed_password"],
-                    }
-                    for _, row in users.iterrows()
+    users = read_data(
+        """
+        select
+            id,
+            name,
+            username,
+            email,
+            hashed_password
+        from users
+        where
+            role in (
+                'admin',
+                'committee_member',
+                'team_manager',
+                'selector'
+            )
+        """
+    )
+    config = {
+        "credentials": {
+            "usernames": {
+                row["email"]: {
+                    "id": row["id"],
+                    "email": row["email"],
+                    "name": row["name"],
+                    "password": row["hashed_password"],
                 }
-            },
-            "preauthorized": {
-                "emails": [
-                    email for email in users[users["hashed_password"].isna()]["email"]
-                ]
-            },
-        }
+                for _, row in users.iterrows()
+            }
+        },
+        "preauthorized": {
+            "emails": [
+                email for email in users[users["hashed_password"].isna()]["email"]
+            ]
+        },
+    }
     return stauth.Authenticate(
         credentials=config["credentials"],
         cookie_name="selections_streamlit_cookie",
