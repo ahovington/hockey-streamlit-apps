@@ -22,7 +22,7 @@ def App(database_lock: True, season: str):
     col1.image(config.app.west_logo_url)
     col2.title("West Hockey Newcastle Selections")
 
-    authenticator = auth(use_config=False)
+    authenticator = auth()
     if login(authenticator):
         APP_NAME = tuple(apps.keys())[0]
         APP_NAME = col2.selectbox("Select page", tuple(apps.keys()))
