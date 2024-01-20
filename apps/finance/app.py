@@ -16,7 +16,7 @@ def App():
     col1.image(config.app.west_logo_url)
     col2.title("West Hockey Newcastle Club Fees")
 
-    authenticator = auth()
+    authenticator = auth(["admin", "committee_member", "collector"])
     if login(authenticator):
         APP_NAME = tuple(apps.keys())[0]
         APP_NAME = col2.selectbox("Select page", tuple(apps.keys()))

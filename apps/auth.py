@@ -26,16 +26,12 @@ def login(authenticator: stauth.Authenticate) -> bool:
         return False
 
 
-def _reset_password(
-    authenticator: stauth.Authenticate, use_config: bool = True
-) -> None:
+def _reset_password(authenticator: stauth.Authenticate) -> None:
     """Resets users password after login
 
     Args:
         authenticator (stauth.Authenticate): The authenticator used to login.
     """
-    if use_config:
-        return
     if authenticator.reset_password(
         username=st.session_state["username"],
         form_name="Reset password",
@@ -45,7 +41,7 @@ def _reset_password(
         _update_config(authenticator)
 
 
-def register_user(authenticator: stauth.Authenticate, use_config: bool = True) -> None:
+def register_user(authenticator: stauth.Authenticate) -> None:
     """Register a new user."""
     st.write(
         "You can only create a login if you have been added to a pre-approved list of users."
@@ -60,8 +56,6 @@ def register_user(authenticator: stauth.Authenticate, use_config: bool = True) -
             "Repeat password": "dont reuse a password!",
         }
     )
-    if use_config:
-        return
     if authenticator.register_user("", preauthorization=True):
         st.success("User registered successfully")
         _update_config(authenticator)
@@ -93,14 +87,17 @@ def _update_config(authenticator: stauth.Authenticate) -> None:
         )
 
 
-def auth() -> stauth.Authenticate:
+def auth(roles: list[str]) -> stauth.Authenticate:
     """Pass the paramaters to the authenicator.
+
+    Args:
+        roles list[str]: List of roles that are allowed access to the application.
 
     Returns:
         stauth.Authenticate: The authenicator.
     """
     users = read_data(
-        """
+        f"""
         select
             id,
             name,
@@ -110,10 +107,7 @@ def auth() -> stauth.Authenticate:
         from users
         where
             role in (
-                'admin',
-                'committee_member',
-                'team_manager',
-                'selector'
+                '{ "', '".join(roles) }'
             )
         """
     )
