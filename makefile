@@ -29,5 +29,5 @@ requirements-test: requirements
 
 
 run-local:
-	($(ACTIVATE_VENV) && streamlit run $(APP)/app.py)
+	($(ACTIVATE_VENV) && streamlit run apps/app.py)
 .PHONY: run-app

@@ -12,6 +12,7 @@ from config import Config
 
 config = Config(
     app=Config.App(
+        seasons=["2023", "2024"],
         west_logo_url="https://hockey-assets.s3.ap-southeast-1.amazonaws.com/wests.png",
         database_lock=False,
     ),
@@ -210,3 +211,26 @@ def calculate_date_interval(
 
 def financial_string_formatting(input: Any):
     return f"""${ input :.1f}"""
+
+
+def select_box_query(
+    name: str, options: list[str], location: st.columns, placeholder: str = ""
+):
+    page_index = None if placeholder else 0
+    if st.query_params.get(name) and st.query_params.get(name) in options:
+        page_index = options.index(st.query_params[name])
+    selection = location.selectbox(
+        f"Select { name }", options, index=page_index, placeholder=placeholder
+    )
+    st.query_params[name] = selection
+    if not selection:
+        del st.query_params[name]
+    return selection
+
+
+def clean_query_params(filters: list[str]):
+    params = st.query_params.to_dict()
+    for param in params:
+        if param in filters:
+            continue
+        del st.query_params[param]
