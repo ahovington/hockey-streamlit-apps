@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 
-from utils import read_data, financial_string_formatting
+from utils import config, read_data, financial_string_formatting
 
 
 def ClubFeesOverview() -> None:
@@ -12,7 +12,7 @@ def ClubFeesOverview() -> None:
     """
     _, col2 = st.columns([3, 7])
     season = col2.selectbox(
-        "Season", ["2023", "2024"], index=1, placeholder="Select season..."
+        "Season", config.app.seasons, index=1, placeholder="Select season..."
     )
     st.subheader("Club Fee Overview", divider="green")
 

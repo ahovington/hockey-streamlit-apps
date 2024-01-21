@@ -84,8 +84,8 @@ def Selections(database_lock: bool, season: str) -> None:
 
     ### Filters for player data ###
     col1, col2, _, _ = st.columns(4)
-    team_round = col1.selectbox("Round", game["round"].unique())
-    team = col2.selectbox("Team", game["team_name"].unique())
+    team_round = col1.selectbox("Round", game["round"].unique().tolist())
+    team = col2.selectbox("Team", game["team_name"].unique().tolist())
 
     ### Validation for player data ###
     if not season and not team_round:

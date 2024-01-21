@@ -22,7 +22,7 @@ def App():
     with st.sidebar:
         st.subheader("", divider="green")
         database_lock = st.toggle("Lock database", True)
-        season = st.selectbox("Season", ["2023", "2024"])
+        season = st.selectbox("Season", config.app.seasons)
 
     col1, col2 = st.columns([3, 7])
     col1.image(config.app.west_logo_url)
@@ -31,7 +31,7 @@ def App():
     authenticator = auth(["admin", "committee_member", "team_manager", "selector"])
     if login(authenticator):
         APP_NAME = tuple(apps.keys())[0]
-        APP_NAME = col2.selectbox("Select page", tuple(apps.keys()))
+        APP_NAME = col2.selectbox("Select page", list(apps.keys()))
         apps[APP_NAME](database_lock, season)
     else:
         with st.expander("Create login"):

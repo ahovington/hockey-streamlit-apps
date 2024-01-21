@@ -20,7 +20,7 @@ def App():
     authenticator = auth(["admin", "committee_member", "collector"])
     if login(authenticator):
         APP_NAME = tuple(apps.keys())[0]
-        APP_NAME = col2.selectbox("Select page", tuple(apps.keys()))
+        APP_NAME = col2.selectbox("Select page", list(apps.keys()))
         apps[APP_NAME]()
     else:
         with st.expander("Create login"):
