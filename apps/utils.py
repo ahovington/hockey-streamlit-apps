@@ -217,8 +217,9 @@ def select_box_query(
     name: str, options: list[str], location: st.columns, placeholder: str = ""
 ):
     page_index = None if placeholder else 0
-    if st.query_params.get(name) and st.query_params.get(name) in options:
-        page_index = options.index(st.query_params[name])
+    query_param = st.query_params.get(name)
+    if query_param and query_param in options:
+        page_index = options.index(query_param)
     selection = location.selectbox(
         f"Select { name }", options, index=page_index, placeholder=placeholder
     )

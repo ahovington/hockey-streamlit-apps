@@ -6,7 +6,7 @@ from utils import config, read_data, select_box_query, clean_query_params
 
 def TeamResults() -> None:
     """Display game results"""
-    clean_query_params(["page", "Season"])
+    clean_query_params(["Application", "page", "Season"])
 
     _, col2, _, _, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     season = select_box_query("Season", config.app.seasons, col2, "Select season...")

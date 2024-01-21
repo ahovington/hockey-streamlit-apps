@@ -8,7 +8,7 @@ from utils import assets, config, read_data, select_box_query, clean_query_param
 
 def GameResults() -> None:
     """Display game results"""
-    clean_query_params(["page", "Season", "Team", "Round"])
+    clean_query_params(["Application", "page", "Season", "Team", "Round"])
 
     _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     season = select_box_query("Season", config.app.seasons, col2, "Select season...")
@@ -16,7 +16,7 @@ def GameResults() -> None:
         "Team",
         read_data(
             "select team || ' - ' || grade as team from teams order by team_order"
-        ),
+        )["team"].values.tolist(),
         col3,
         "Select team...",
     )
@@ -74,7 +74,8 @@ def round_filter_data():
         """
     )
     df.loc[:, "round_order"] = df.loc[:, "round_order"].astype(float)
-    return df.sort_values("round_order")["round"]
+    df = df.sort_values("round_order")["round"]
+    return df.values.tolist()
 
 
 def game_results_data(

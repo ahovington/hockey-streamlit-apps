@@ -1,6 +1,6 @@
 import streamlit as st
 
-from utils import config
+from utils import config, clean_query_params
 from auth import auth, login, register_user
 from .club_fees_outstanding import ClubFeesOustanding
 from .club_fees_overview import ClubFeesOverview
@@ -12,6 +12,7 @@ apps = {
 
 
 def App():
+    clean_query_params(["Application"])
     col1, col2 = st.columns([3, 7])
     col1.image(config.app.west_logo_url)
     col2.title("West Hockey Newcastle Club Fees")

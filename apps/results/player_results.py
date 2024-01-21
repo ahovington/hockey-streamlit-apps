@@ -5,12 +5,14 @@ from utils import config, read_data, select_box_query, clean_query_params
 
 def PlayerResults() -> None:
     """Display player results"""
-    clean_query_params(["page", "Player", "Season"])
+    clean_query_params(["Application", "page", "Player", "Season"])
 
     _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     player_name = select_box_query(
         "Player",
-        read_data("select full_name as player from players order by full_name"),
+        read_data("select full_name as player from players order by full_name")[
+            "player"
+        ].values.tolist(),
         col2,
         "Select player...",
     )

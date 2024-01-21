@@ -1,6 +1,6 @@
 import streamlit as st
 
-from utils import config
+from utils import config, clean_query_params
 from auth import login, register_user, auth
 from .documentation import Documentation
 from .grade_assignments import GradeAssignments
@@ -18,6 +18,7 @@ apps = {
 
 
 def App():
+    clean_query_params(["Application"])
     with st.sidebar:
         st.subheader("", divider="green")
         database_lock = st.toggle("Lock database", True)

@@ -1,6 +1,6 @@
 import streamlit as st
 
-from utils import config
+from utils import config, select_box_query
 from results.app import App as restults_app
 from selections.app import App as selections_app
 from finance.app import App as finance_app
@@ -20,6 +20,5 @@ if __name__ == "__main__":
     )
 
     with st.sidebar:
-        app_name = st.selectbox("Select page", tuple(apps.keys()))
-
+        app_name = select_box_query("Application", tuple(apps.keys()), st)
     apps[app_name]()
