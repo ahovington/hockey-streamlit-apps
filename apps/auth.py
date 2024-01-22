@@ -120,7 +120,7 @@ def auth(roles: list[str]) -> stauth.Authenticate:
                     "id": row["id"],
                     "email": row["email"],
                     "name": row["name"],
-                    "password": row["hashed_password"],
+                    "password": row.get("hashed_password", ""),
                 }
                 for _, row in users.iterrows()
             }
