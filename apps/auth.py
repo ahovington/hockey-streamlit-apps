@@ -1,5 +1,3 @@
-import yaml
-from yaml.loader import SafeLoader
 import hashlib
 import streamlit as st
 import streamlit_authenticator as stauth
@@ -136,7 +134,7 @@ def auth(roles: list[str]) -> stauth.Authenticate:
     return stauth.Authenticate(
         credentials=config["credentials"],
         cookie_name="selections_streamlit_cookie",
-        key="trcyvgubhinjmkl",
-        cookie_expiry_days=30,
+        key="west-hockey-newcastle",
+        cookie_expiry_days=1,
         preauthorized=config.get("preauthorized", []),
     )
