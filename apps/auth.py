@@ -14,16 +14,20 @@ def login(authenticator: stauth.Authenticate) -> bool:
         bool: The result of the login attempt, True if successful.
     """
     authenticator.login("Login", "main")
-    if st.session_state["authentication_status"]:
+    try:
+        if st.session_state["authentication_status"]:
+            authenticator.logout("Logout", "main", key="unique_key")
+            _reset_password(authenticator)
+            return True
+        if st.session_state["authentication_status"] is False:
+            st.error("Username/password is incorrect")
+            return False
+        if st.session_state["authentication_status"] is None:
+            st.warning("Please enter your username and password")
+            return False
+    except TypeError:
+        st.session_state["authentication_status"] = False
         authenticator.logout("Logout", "main", key="unique_key")
-        _reset_password(authenticator)
-        return True
-    if st.session_state["authentication_status"] is False:
-        st.error("Username/password is incorrect")
-        return False
-    if st.session_state["authentication_status"] is None:
-        st.warning("Please enter your username and password")
-        return False
 
 
 def _reset_password(authenticator: stauth.Authenticate) -> None:
