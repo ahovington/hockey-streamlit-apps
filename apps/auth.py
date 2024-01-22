@@ -11,21 +11,17 @@ def login(authenticator: stauth.Authenticate) -> bool:
     Returns:
         bool: The result of the login attempt, True if successful.
     """
-    authenticator.login("Login", "main")
-    try:
-        if st.session_state["authentication_status"]:
-            authenticator.logout("Logout", "main", key="unique_key")
-            _reset_password(authenticator)
-            return True
-        if st.session_state["authentication_status"] is False:
-            st.error("Username/password is incorrect")
-            return False
-        if st.session_state["authentication_status"] is None:
-            st.warning("Please enter your username and password")
-            return False
-    except TypeError:
-        st.session_state["authentication_status"] = False
-        authenticator.logout("Logout", "main", key="unique_key")
+    authenticator.login(location="main")
+    if st.session_state["authentication_status"]:
+        authenticator.logout(location="main", key="unique_key")
+        _reset_password(authenticator)
+        return True
+    if st.session_state["authentication_status"] is False:
+        st.error("Username/password is incorrect")
+        return False
+    if st.session_state["authentication_status"] is None:
+        st.warning("Please enter your username and password")
+        return False
 
 
 def _reset_password(authenticator: stauth.Authenticate) -> None:
@@ -36,7 +32,6 @@ def _reset_password(authenticator: stauth.Authenticate) -> None:
     """
     if authenticator.reset_password(
         username=st.session_state["username"],
-        form_name="Reset password",
         location="sidebar",
     ):
         st.success("Password modified successfully")
@@ -58,7 +53,18 @@ def register_user(authenticator: stauth.Authenticate) -> None:
             "Repeat password": "dont reuse a password!",
         }
     )
-    if authenticator.register_user("", preauthorization=True):
+    if authenticator.register_user(
+        location="main",
+        preauthorization=True,
+        fields={
+            "Form name": "Register User",
+            "Email": "Email",
+            "Username": "Username",
+            "Password": "Password",
+            "Repeat password": "Repeat password",
+            "Register": "Register",
+        },
+    ):
         st.success("User registered successfully")
         _update_config(authenticator)
 
