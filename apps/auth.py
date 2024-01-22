@@ -120,9 +120,9 @@ def auth(roles: list[str]) -> stauth.Authenticate:
                     "id": row["id"],
                     "email": row["email"],
                     "name": row["name"],
-                    "password": row.get("hashed_password", ""),
+                    "password": row["hashed_password"],
                 }
-                for _, row in users.iterrows()
+                for _, row in users[~users["hashed_password"].isna()].iterrows()
             }
         },
         "preauthorized": {
