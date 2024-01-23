@@ -131,13 +131,13 @@ def ClubFeesOverview() -> None:
     col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     invoice_status = col1.selectbox(
         "Status",
-        _invoices["status"].unique(),
+        _invoices["status"].unique().tolist(),
         index=None,
         placeholder="Select status...",
     )
     invoice_type = col2.selectbox(
         "Invoice type",
-        _invoices["invoice_description"].unique(),
+        _invoices["invoice_description"].unique().tolist(),
         index=None,
         placeholder="Select invoice type...",
     )
@@ -182,7 +182,7 @@ def invoice_data() -> pd.DataFrame:
         inner join players as p
         on i.player_id = p.id
         where
-            i.status not in ('VOID')
+            i.status not in ('VOID', 'DELETED')
         order by
             r.season,
             i.due_date,
