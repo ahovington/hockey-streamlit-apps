@@ -55,16 +55,17 @@ def register_user(authenticator: stauth.Authenticate) -> None:
         }
     )
     if authenticator.register_user(
-        form_name="Register User",
+        form_name="",
         location="main",
         preauthorization=True,
-        fields={
-            "Email": "Email",
-            "Username": "Username",
-            "Password": "Password",
-            "Repeat password": "Repeat password",
-            "Register": "Register",
-        },
+        # TODO: will probably need to add this back in a day.
+        # fields={
+        #     "Email": "Email",
+        #     "Username": "Username",
+        #     "Password": "Password",
+        #     "Repeat password": "Repeat password",
+        #     "Register": "Register",
+        # },
     ):
         st.success("User registered successfully")
         _update_config(authenticator)
