@@ -69,7 +69,7 @@ def invoice_data() -> pd.DataFrame:
         inner join players as p
         on i.player_id = p.id
         where
-            i.status not in ('PAID', 'VOID', 'DELETED') and
+            i.status not in ('PAID', 'VOID', 'VOIDED', 'DELETED') and
             i.due_date < (current_date + INTERVAL'1 month')
         order by
             r.season,
