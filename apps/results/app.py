@@ -3,13 +3,13 @@ import streamlit as st
 from utils import config, select_box_query
 from .game_results import GameResults
 from .team_results import TeamResults
-from .player_results import PlayerResults
+from .player_profile import PlayerProfile
 
 
 PAGES = {
     "Game results": GameResults,
     "Team results": TeamResults,
-    "Player Statistics": PlayerResults,
+    "Player profile": PlayerProfile,
 }
 
 

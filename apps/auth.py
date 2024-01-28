@@ -11,10 +11,7 @@ def login(authenticator: stauth.Authenticate) -> bool:
     Returns:
         bool: The result of the login attempt, True if successful.
     """
-    authenticator.login(
-        # form_name="Login",
-        location="main"
-    )
+    authenticator.login(form_name="Login", location="main")
     if st.session_state["authentication_status"]:
         authenticator.logout(button_name="Logout", location="main", key="unique_key")
         _reset_password(authenticator)
@@ -34,7 +31,7 @@ def _reset_password(authenticator: stauth.Authenticate) -> None:
         authenticator (stauth.Authenticate): The authenticator used to login.
     """
     if authenticator.reset_password(
-        # form_name="Reset password",
+        form_name="Reset password",
         username=st.session_state["username"],
         location="sidebar",
     ):
@@ -58,7 +55,7 @@ def register_user(authenticator: stauth.Authenticate) -> None:
         }
     )
     if authenticator.register_user(
-        # form_name="",
+        form_name="",
         location="main",
         preauthorization=True,
         # TODO: will probably need to add this back in a day.
