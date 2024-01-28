@@ -1,5 +1,3 @@
-import yaml
-from yaml.loader import SafeLoader
 import hashlib
 import streamlit as st
 import streamlit_authenticator as stauth
@@ -13,9 +11,12 @@ def login(authenticator: stauth.Authenticate) -> bool:
     Returns:
         bool: The result of the login attempt, True if successful.
     """
-    authenticator.login("Login", "main")
+    authenticator.login(
+        # form_name="Login",
+        location="main"
+    )
     if st.session_state["authentication_status"]:
-        authenticator.logout("Logout", "main", key="unique_key")
+        authenticator.logout(button_name="Logout", location="main", key="unique_key")
         _reset_password(authenticator)
         return True
     if st.session_state["authentication_status"] is False:
@@ -26,26 +27,22 @@ def login(authenticator: stauth.Authenticate) -> bool:
         return False
 
 
-def _reset_password(
-    authenticator: stauth.Authenticate, use_config: bool = True
-) -> None:
+def _reset_password(authenticator: stauth.Authenticate) -> None:
     """Resets users password after login
 
     Args:
         authenticator (stauth.Authenticate): The authenticator used to login.
     """
-    if use_config:
-        return
     if authenticator.reset_password(
+        # form_name="Reset password",
         username=st.session_state["username"],
-        form_name="Reset password",
         location="sidebar",
     ):
         st.success("Password modified successfully")
         _update_config(authenticator)
 
 
-def register_user(authenticator: stauth.Authenticate, use_config: bool = True) -> None:
+def register_user(authenticator: stauth.Authenticate) -> None:
     """Register a new user."""
     st.write(
         "You can only create a login if you have been added to a pre-approved list of users."
@@ -60,9 +57,19 @@ def register_user(authenticator: stauth.Authenticate, use_config: bool = True) -
             "Repeat password": "dont reuse a password!",
         }
     )
-    if use_config:
-        return
-    if authenticator.register_user("", preauthorization=True):
+    if authenticator.register_user(
+        # form_name="",
+        location="main",
+        preauthorization=True,
+        # TODO: will probably need to add this back in a day.
+        # fields={
+        #     "Email": "Email",
+        #     "Username": "Username",
+        #     "Password": "Password",
+        #     "Repeat password": "Repeat password",
+        #     "Register": "Register",
+        # },
+    ):
         st.success("User registered successfully")
         _update_config(authenticator)
 
@@ -93,56 +100,52 @@ def _update_config(authenticator: stauth.Authenticate) -> None:
         )
 
 
-def auth(use_config: bool = True) -> stauth.Authenticate:
+def auth(roles: list[str]) -> stauth.Authenticate:
     """Pass the paramaters to the authenicator.
+
+    Args:
+        roles list[str]: List of roles that are allowed access to the application.
 
     Returns:
         stauth.Authenticate: The authenicator.
     """
-    if use_config:
-        with open("selections/config.yaml", "r", encoding="utf-8") as file:
-            config = yaml.load(file, Loader=SafeLoader)
-    else:
-        users = read_data(
-            """
-            select
-                id,
-                name,
-                username,
-                email,
-                hashed_password
-            from users
-            where
-                role in (
-                    'admin',
-                    'committee_member',
-                    'team_manager',
-                    'selector'
-                )
-            """
-        )
-        config = {
-            "credentials": {
-                "usernames": {
-                    row["email"]: {
-                        "id": row["id"],
-                        "email": row["email"],
-                        "name": row["name"],
-                        "password": row["hashed_password"],
-                    }
-                    for _, row in users.iterrows()
+    users = read_data(
+        f"""
+        select
+            id,
+            name,
+            username,
+            email,
+            hashed_password
+        from users
+        where
+            role in (
+                '{ "', '".join(roles) }'
+            )
+        """
+    )
+    config = {
+        "credentials": {
+            "usernames": {
+                row["email"]: {
+                    "id": row["id"],
+                    "email": row["email"],
+                    "name": row["name"],
+                    "password": row["hashed_password"],
                 }
-            },
-            "preauthorized": {
-                "emails": [
-                    email for email in users[users["hashed_password"].isna()]["email"]
-                ]
-            },
-        }
+                for _, row in users[~users["hashed_password"].isna()].iterrows()
+            }
+        },
+        "preauthorized": {
+            "emails": [
+                email for email in users[users["hashed_password"].isna()]["email"]
+            ]
+        },
+    }
     return stauth.Authenticate(
         credentials=config["credentials"],
         cookie_name="selections_streamlit_cookie",
-        key="trcyvgubhinjmkl",
-        cookie_expiry_days=30,
+        key="west-hockey-newcastle",
+        cookie_expiry_days=1,
         preauthorized=config.get("preauthorized", []),
     )

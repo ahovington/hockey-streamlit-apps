@@ -1,20 +1,23 @@
 import streamlit as st
 
-from utils import read_data
+from utils import config, read_data, select_box_query, clean_query_params
 
 
 def PlayerResults() -> None:
     """Display player results"""
+    clean_query_params(["Application", "page", "Player", "Season"])
+
     _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
-    season = col2.selectbox(
-        "Season", ["2023", "2024"], index=None, placeholder="Select season..."
-    )
-    player_name = col3.selectbox(
+    player_name = select_box_query(
         "Player",
-        read_data("select full_name as player from players order by full_name"),
-        index=None,
-        placeholder="Select player...",
+        read_data("select full_name as player from players order by full_name")[
+            "player"
+        ].values.tolist(),
+        col2,
+        "Select player...",
     )
+    season = select_box_query("Season", config.app.seasons, col3, "Select season...")
+
     if not player_name:
         st.warning("Pick a player from dropdown.")
         return

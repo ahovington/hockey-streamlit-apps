@@ -3,39 +3,39 @@ import pandas as pd
 import streamlit as st
 from streamlit_calendar import calendar
 
-from utils import read_data, assets
+from utils import assets, config, read_data, select_box_query, clean_query_params
 
 
 def GameResults() -> None:
     """Display game results"""
+    clean_query_params(["Application", "page", "Season", "Team", "Round"])
+
     _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
-    season = col2.selectbox("Season", ["2023", "2024"], placeholder="Select season...")
-    team = col3.selectbox(
+    season = select_box_query("Season", config.app.seasons, col2, "Select season...")
+    team = select_box_query(
         "Team",
         read_data(
             "select team || ' - ' || grade as team from teams order by team_order"
-        ),
-        index=None,
-        placeholder="Select team...",
+        )["team"].values.tolist(),
+        col3,
+        "Select team...",
     )
-    game_round = col4.selectbox(
-        "Round",
-        round_filter_data(),
-        index=None,
-        placeholder="Select round...",
-    )
+    game_round = select_box_query("Round", round_filter_data(), col4, "Select round...")
+
     if not season:
         st.warning("Pick a season from dropdown.")
         return
 
     # Show filters applied
     filters_applied = []
-    if game_round:
-        filters_applied.append(f"Round: { game_round }")
+    if season:
+        filters_applied.append(f"Season: { season }")
     if team:
         filters_applied.append(f"Team: { team }")
+    if game_round:
+        filters_applied.append(f"Round: { game_round }")
     st.subheader(
-        f"""{ season } Game Results for { ", ".join(filters_applied) }""",
+        f"""Game Results for { ", ".join(filters_applied) }""",
         divider="green",
     )
 
@@ -43,7 +43,7 @@ def GameResults() -> None:
     game_results = game_results_data(season, team, game_round)
 
     if not game_results.shape[0]:
-        st.warning(f"""No results found for for { ", ".join(filters_applied) }""")
+        st.warning(f"""No results found for { ", ".join(filters_applied) }""")
         return
 
     result_views = {
@@ -74,7 +74,8 @@ def round_filter_data():
         """
     )
     df.loc[:, "round_order"] = df.loc[:, "round_order"].astype(float)
-    return df.sort_values("round_order")["round"]
+    df = df.sort_values("round_order")["round"]
+    return df.values.tolist()
 
 
 def game_results_data(

@@ -1,13 +1,15 @@
 import pandas as pd
 import streamlit as st
 
-from utils import read_data
+from utils import config, read_data, select_box_query, clean_query_params
 
 
 def TeamResults() -> None:
     """Display game results"""
+    clean_query_params(["Application", "page", "Season"])
+
     _, col2, _, _, _ = st.columns([3, 2, 2, 2, 1], gap="small")
-    season = col2.selectbox("Season", ["2023", "2024"], placeholder="Select season...")
+    season = select_box_query("Season", config.app.seasons, col2, "Select season...")
     if not season:
         st.warning("Pick a season from dropdown.")
         return

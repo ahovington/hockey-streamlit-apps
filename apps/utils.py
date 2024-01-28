@@ -12,6 +12,7 @@ from config import Config
 
 config = Config(
     app=Config.App(
+        seasons=["2023", "2024"],
         west_logo_url="https://hockey-assets.s3.ap-southeast-1.amazonaws.com/wests.png",
         database_lock=False,
     ),
@@ -26,6 +27,28 @@ config = Config(
 )
 
 engine = create_engine(config.database.db_url())
+
+
+asset_url_stem = "https://hockey-assets.s3.ap-southeast-1.amazonaws.com/"
+assets = {
+    "West Green": f"{ asset_url_stem }wests.png",
+    "West Red": f"{ asset_url_stem }wests.png",
+    "West": f"{ asset_url_stem }wests.png",
+    "University": f"{ asset_url_stem }university.jpeg",
+    "University Trains": f"{ asset_url_stem }university.jpeg",
+    "Tigers": f"{ asset_url_stem }tigers.png",
+    "Tiger": f"{ asset_url_stem }tigers.png",
+    "Souths": f"{ asset_url_stem }souths.jpeg",
+    "Port Stephens": f"{ asset_url_stem }port_stephens.jpeg",
+    "Norths Dark": f"{ asset_url_stem }norths.jpeg",
+    "Norths Light": f"{ asset_url_stem }norths.jpeg",
+    "Norths": f"{ asset_url_stem }norths.jpeg",
+    "North": f"{ asset_url_stem }norths.jpeg",
+    "Maitland": f"{ asset_url_stem }maitland.png",
+    "Gosford": f"{ asset_url_stem }gosford.png",
+    "Crusaders": f"{ asset_url_stem }crusaders.png",
+    "Colts": f"{ asset_url_stem }colts.png",
+}
 
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits) -> str:
@@ -184,3 +207,31 @@ def calculate_date_interval(
             date_end.strftime("%Y-%m-%d %H:%M:%S"),
         )
     return (date_start.strftime("%d %B"), date_end.strftime("%d %B"))
+
+
+def financial_string_formatting(input: Any):
+    return f"""${ input :.1f}"""
+
+
+def select_box_query(
+    name: str, options: list[str], location: st.columns, placeholder: str = ""
+):
+    page_index = None if placeholder else 0
+    query_param = st.query_params.get(name)
+    if query_param and query_param in options:
+        page_index = options.index(query_param)
+    selection = location.selectbox(
+        f"Select { name }", options, index=page_index, placeholder=placeholder
+    )
+    st.query_params[name] = selection
+    if not selection:
+        del st.query_params[name]
+    return selection
+
+
+def clean_query_params(filters: list[str]):
+    params = st.query_params.to_dict()
+    for param in params:
+        if param in filters:
+            continue
+        del st.query_params[param]
