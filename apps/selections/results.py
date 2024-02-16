@@ -36,6 +36,9 @@ def Results(database_lock: bool, season: str) -> None:
         min_value=dt.date(year=int(season), month=1, day=1),
         max_value=dt.date(year=int(season), month=12, day=31),
     )
+    if not date_filter:
+        st.error(f"Enter date to find games.")
+        return
 
     ### load game data ###
     game_result = game_data(season, date_filter)

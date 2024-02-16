@@ -143,6 +143,6 @@ def auth(roles: list[str]) -> stauth.Authenticate:
         credentials=config["credentials"],
         cookie_name="selections_streamlit_cookie",
         key="west-hockey-newcastle",
-        cookie_expiry_days=1,
+        cookie_expiry_days=30,
         preauthorized=config.get("preauthorized", []),
     )

@@ -44,6 +44,9 @@ def Selections(database_lock: bool, season: str) -> None:
         min_value=dt.date(year=int(season), month=1, day=1),
         max_value=dt.date(year=int(season), month=12, day=31),
     )
+    if not date_filter:
+        st.error(f"Enter date to find games.")
+        return
 
     start_date_ui, end_date_ui = calculate_date_interval(date_filter, date_filter=False)
     st.write(f"""Games between { start_date_ui } and { end_date_ui } """)

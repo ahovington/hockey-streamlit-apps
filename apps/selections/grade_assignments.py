@@ -39,6 +39,10 @@ def GradeAssignments(database_lock: bool, season: str) -> None:
         st.error(f"No player data available for { season }")
         return
 
+    with st.expander("Preview teams", expanded=False):
+        if player.shape[0]:
+            teams_table(player)
+
     updated_player = input_player_team_table(player, team["full_team_name"].unique())
     player_changes = compare_dataframes(player, updated_player, "registration_id")
 
@@ -239,3 +243,25 @@ def update_default_team(df: pd.DataFrame, lock: bool = True):
             row["grade"],
             value_string_type=True,
         )
+
+
+def teams_table(df: pd.DataFrame) -> None:
+    """Present the selections made for the week.
+
+    Args:
+        df (pd.DataFrame): A dataframe with the players allocated to a team
+
+    Retuns: None
+    """
+    # Calculate output table column order
+    df = df[~df["team"].isna()]
+    df.loc[:, "selection_no"] = (df.groupby(["team"]).cumcount()) + 1
+    # st.table(df.groupby(["players_name"]).count())
+
+    st.table(
+        df.pivot(
+            columns="team",
+            values="players_name",
+            index="selection_no",
+        ).fillna("")
+    )
