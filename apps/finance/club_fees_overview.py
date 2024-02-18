@@ -24,16 +24,14 @@ def ClubFeesOverview() -> None:
     if season:
         _invoices = invoices[invoices["season"] == season]
     _invoices = _invoices.drop(columns=["season"])
-    paid_on_time = _invoices[_invoices["amount"] > 0].drop_duplicates(
+    paid_on_time = _invoices[_invoices["amount_invoiced"] > 0].drop_duplicates(
         subset=["registration_id"]
     )
     # Headline statistics
     col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     col1.metric(
         "Fees collected",
-        financial_string_formatting(
-            _invoices[_invoices["status"] == "PAID"]["total_amount"].sum()
-        ),
+        financial_string_formatting(_invoices["amount_paid"].sum()),
     )
     col2.metric(
         "Paid on time",
@@ -43,9 +41,7 @@ def ClubFeesOverview() -> None:
     )
     col3.metric(
         "Net amount outstanding",
-        financial_string_formatting(
-            _invoices[_invoices["status"] == "AUTHORISED"]["total_amount"].sum()
-        ),
+        financial_string_formatting(_invoices["amount_due"].sum()),
     )
     col4.metric(
         "Discounts applied", financial_string_formatting(_invoices["discount"].sum())
@@ -62,28 +58,23 @@ def ClubFeesOverview() -> None:
     col3.metric(
         "Average fee collected",
         financial_string_formatting(
-            _invoices[_invoices["status"] == "PAID"]["total_amount"].sum()
-            / _invoices["registration_id"].nunique()
+            _invoices["amount_paid"].sum() / _invoices["registration_id"].nunique()
         ),
-    )
-    col4.metric(
-        "Per game adjustments applied",
-        financial_string_formatting(_invoices["per_game_adjustment"].sum()),
     )
 
     # Timeseries of collected fees
-    st.subheader("Fees collected by month", divider="green")
+    st.subheader("Fees fully paid by month", divider="green")
     collected_fees = _invoices[~_invoices["fully_paid_month"].isna()]
     if collected_fees.shape[0]:
         collected_fees = (
             collected_fees.groupby("fully_paid_month")
-            .agg({"total_amount": "sum"})
+            .agg({"amount_paid": "sum"})
             .reset_index()
         )
         get_line_chart(
             collected_fees,
             date_col="fully_paid_month",
-            y_col="total_amount",
+            y_col="amount_paid",
         )
     else:
         st.warning("No payments have been received for this period.")
@@ -109,15 +100,6 @@ def ClubFeesOverview() -> None:
         "fee type",
         "registration count",
     )
-
-    # fee amounts
-    st.subheader("Invoices by fee amount", divider="green")
-    fee_amount = (
-        distinct_regos.groupby(["total_amount"]).agg({"id": "count"}).reset_index()
-    )
-    fee_amount.columns = ["fee amount", "registration count"]
-    fee_amount = fee_amount.astype({"fee amount": str, "registration count": int})
-    get_bar_chart(fee_amount, "fee amount", "registration count")
 
     # discounts taken up
     st.subheader("Invoices by discount type", divider="green")
@@ -167,14 +149,13 @@ def invoice_data() -> pd.DataFrame:
             i.invoice_sent,
             i.on_payment_plan,
             i.discount_applied,
-            i.amount,
-            i.discount,
+            i.amount as amount_invoiced,
             i.fully_paid_date,
             date_trunc('MONTH', i.fully_paid_date) as fully_paid_month,
+            i.discount,
             i.amount_paid,
-            i.per_game_adjustment_applied as per_game_adjustment,
             i.amount_credited,
-            i.amount - i.discount - i.amount_credited as total_amount,
+            i.amount - (i.discount + i.amount_credited + i.amount_paid) as amount_due,
             i.lines
         from invoices as i
         inner join registrations as r
@@ -186,7 +167,8 @@ def invoice_data() -> pd.DataFrame:
         order by
             r.season,
             i.due_date,
-            total_amount desc,
+            i.create_ts desc,
+            amount_due desc,
             issued_date asc
     """
     )

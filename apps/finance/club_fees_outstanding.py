@@ -29,10 +29,6 @@ def ClubFeesOustanding() -> None:
     col3.metric(
         "Discounts applied", financial_string_formatting(overdue["discount"].sum())
     )
-    col4.metric(
-        "Per game adjustments applied",
-        financial_string_formatting(overdue["per_game_adjustment"].sum()),
-    )
 
     # Table of overdue fees
     st.subheader("OVERDUE CLUB FEES", divider="green")
@@ -44,8 +40,9 @@ def ClubFeesOustanding() -> None:
     # Table of fees due in the future
     st.subheader("UPCOMING CLUB FEES", divider="green")
     upcoming = _invoices[_invoices["due_date"] > dt.datetime.now()]
+    st.write("FEES DUE IN THE NEXT MONTH")
     st.metric(
-        "Upcoming fees due",
+        "",
         financial_string_formatting(upcoming["total_amount_due"].sum()),
     )
     st.dataframe(upcoming, hide_index=True, use_container_width=True)
@@ -66,8 +63,8 @@ def invoice_data() -> pd.DataFrame:
             i.amount as amount_invoiced,
             i.discount,
             i.amount_paid,
-            i.per_game_adjustment_applied as per_game_adjustment,
-            i.amount - i.discount - i.amount_credited - i.amount_paid as total_amount_due,
+            i.amount_credited,
+            i.amount - (i.discount + i.amount_credited + i.amount_paid) as total_amount_due,
             i.on_payment_plan
         from invoices as i
         inner join registrations as r
@@ -114,8 +111,8 @@ def largest_over_due_debitors() -> pd.DataFrame:
             sum(i.amount) as amount_invoiced,
             sum(i.discount) as discount,
             sum(i.amount_paid) as amount_paid,
-            sum(i.per_game_adjustment_applied) as per_game_adjustment,
-            sum(i.amount - i.discount - i.amount_credited) as total_amount_due,
+            sum(i.amount_credited) as amount_credited,
+            sum(i.amount - (i.discount + i.amount_credited + i.amount_paid)) as total_amount_due,
             max(i.on_payment_plan::int)::boolean as on_payment_plan
         from invoices as i
         inner join registrations as r
