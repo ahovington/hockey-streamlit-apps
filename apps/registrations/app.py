@@ -1,17 +1,14 @@
 import streamlit as st
 
 from utils import config, clean_query_params
-from auth import login, register_user, auth
+from auth import auth, login, register_user
 from .documentation import Documentation
-from .results import Results
-from .selections import Selections
-from .games import Games
+from .grade_assignments import GradeAssignments
 
 apps = {
     "Documentation": Documentation,
-    "Games": Games,
-    "Selections": Selections,
-    "Results": Results,
+    "Registrations Overview": Documentation,
+    "Grade Assignment": GradeAssignments,
 }
 
 
@@ -24,9 +21,9 @@ def App():
 
     col1, col2 = st.columns([3, 7])
     col1.image(config.app.west_logo_url)
-    col2.title("West Hockey Newcastle Selections")
+    col2.title("West Hockey Newcastle Registrations")
 
-    authenticator = auth(["admin", "committee_member", "team_manager", "selector"])
+    authenticator = auth(["admin", "committee_member"])
     if login(authenticator):
         APP_NAME = tuple(apps.keys())[0]
         APP_NAME = col2.selectbox("Select page", list(apps.keys()))

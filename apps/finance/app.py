@@ -6,8 +6,8 @@ from .club_fees_outstanding import ClubFeesOustanding
 from .club_fees_overview import ClubFeesOverview
 
 apps = {
-    "Outstanding Club fees": ClubFeesOustanding,
-    "Overview": ClubFeesOverview,
+    "Club Fees Overdue": ClubFeesOustanding,
+    "Club Fees Overview": ClubFeesOverview,
 }
 
 

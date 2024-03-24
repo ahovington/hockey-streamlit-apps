@@ -3,12 +3,14 @@ import streamlit as st
 from utils import config, select_box_query
 from results.app import App as restults_app
 from selections.app import App as selections_app
+from registrations.app import App as registrations_app
 from finance.app import App as finance_app
 
 apps = {
     "Results": restults_app,
-    "Registrations": finance_app,
     "Selections": selections_app,
+    "Finance": finance_app,
+    "Registrations": registrations_app,
 }
 
 if __name__ == "__main__":
