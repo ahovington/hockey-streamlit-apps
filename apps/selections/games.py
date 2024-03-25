@@ -2,7 +2,14 @@ import datetime as dt
 import streamlit as st
 import pandas as pd
 
-from utils import add_timestamp, compare_dataframes, create_data, read_data, update_data
+from utils import (
+    config,
+    add_timestamp,
+    compare_dataframes,
+    create_data,
+    read_data,
+    update_data,
+)
 
 
 def Games(database_lock: bool, season: str) -> None:
@@ -15,9 +22,71 @@ def Games(database_lock: bool, season: str) -> None:
     Retuns: None
     """
     st.title("Games")
-    st.subheader("Update game data")
+    with st.expander("Enter game data", expanded=False):
+        id, team_id, location_id, round, finals, opposition, start_ts = enter_game_data(
+            season
+        )
+        if st.button("Submit"):
+            write_game_data(
+                id,
+                season,
+                team_id,
+                location_id,
+                round,
+                finals,
+                opposition,
+                start_ts,
+                database_lock,
+            )
+
+    with st.expander("Update game data", expanded=False):
+        update_game_data(database_lock, season)
+
+
+def enter_game_data(season: str):
+    # Enter data
+    team = st.selectbox(
+        "Team",
+        read_data(f"""select distinct team from teams where season = '{season}'"""),
+    )
+    grade = st.selectbox(
+        "Grade", read_data(f"""select grade from teams where season = '{season}'""")
+    )
+    location = st.selectbox("Location", read_data("""select name from locations"""))
+    field = st.selectbox("Field", read_data("""select field from locations"""))
+    round = st.text_input("Round")
+    opposition = st.text_input("Opposition")
+    date = st.date_input("Game date")
+    start_time = st.time_input("Start time")
+    finals = st.selectbox("Finals", [False, True])
+
+    # Transform inputs
+    id = f"{season}{grade}{team}{round}"
+    team_id = read_data(
+        f"""select id from teams where season = '{season}' and team = '{team}' and grade = '{grade}'"""
+    ).iloc[0, 0]
+    location_id = read_data(
+        f"""select id from locations where name = '{location}' and field = '{field}'"""
+    ).iloc[0, 0]
+    start_ts = dt.datetime(
+        date.year, date.month, date.day, start_time.hour, start_time.minute
+    ).strftime("%Y-%m-%d %H:%M:%S")
+    return id, team_id, location_id, round, finals, opposition, start_ts
+
+
+def update_game_data(database_lock: bool, season: str):
+    """Update data of games already created.
+
+    Args:
+        database_lock (bool): True if the database lock is enabled.
+        season (str): The hockey season, usually the calendar year.
+
+    Retuns: None
+    """
 
     all_game_result = game_data(season)
+    if not all_game_result.shape[0]:
+        return
     all_game_result.loc[:, "start_ts"] = pd.to_datetime(
         all_game_result.loc[:, "start_ts"]
     )
@@ -138,6 +207,49 @@ def game_data(
             "goals_against",
         ]
     ]
+
+
+def write_game_data(
+    id: str,
+    season: str,
+    team_id: str,
+    location_id: str,
+    round: str,
+    finals: bool,
+    opposition: str,
+    start_ts: str,
+    lock: bool = True,
+) -> None:
+    if lock:
+        st.error("Database is locked, contact the administrator.")
+        return
+    create_data(
+        "games",
+        (
+            "id",
+            "create_ts",
+            "update_ts",
+            "season",
+            "team_id",
+            "location_id",
+            "round",
+            "finals",
+            "opposition",
+            "start_ts",
+        ),
+        (
+            id,
+            str(add_timestamp()),
+            str(add_timestamp()),
+            season,
+            team_id,
+            location_id,
+            round,
+            finals,
+            opposition,
+            start_ts,
+        ),
+    )
 
 
 def update_game_results(df: pd.DataFrame, lock: bool = True) -> None:

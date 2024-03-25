@@ -15,6 +15,7 @@ apps = {
 def App():
     clean_query_params(["Application"])
     with st.sidebar:
+        config.app.seasons.sort(reverse=True)
         st.subheader("", divider="green")
         database_lock = st.toggle("Lock database", True)
         season = st.selectbox("Season", config.app.seasons)
