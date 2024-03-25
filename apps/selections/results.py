@@ -21,7 +21,7 @@ def Results(database_lock: bool, season: str) -> None:
     # Date end filter
     max_date = read_data(
         f"""
-        select max(start_ts) as max_ts
+        select max(start_ts) + INTERVAL '1 days' as max_ts
         from games
         where
             season = '{ season }'
@@ -88,17 +88,63 @@ def Results(database_lock: bool, season: str) -> None:
         return
 
     # update rows
-    result_updates = changes[changes["create_result"] == False]
-    st.write("Update data", result_updates)
+    selection_updates = changes[changes["create_selections"] == False]
+    st.write("Update selections data", selection_updates)
+    update_player_selections(
+        selection_updates,
+        database_lock,
+    )
+    result_updates = changes[changes["create_results"] == False]
+    results_orig = player_result[
+        ["selection_id", "goals", "green_card", "yellow_card", "red_card"]
+    ].rename(
+        columns={
+            "goals": "orig_goals",
+            "green_card": "orig_green",
+            "yellow_card": "orig_yellow",
+            "red_card": "orig_red",
+        }
+    )
+    result_updates = result_updates.merge(results_orig, on="selection_id", how="inner")
+    result_updates.loc[:, "result_change"] = result_updates[
+        [
+            "goals",
+            "green_card",
+            "yellow_card",
+            "red_card",
+            "orig_goals",
+            "orig_green",
+            "orig_yellow",
+            "orig_red",
+        ]
+    ].sum(axis=1)
+    result_updates = result_updates[
+        (result_updates["result_change"] != 0)
+        | (-result_updates["result_change"].isna())
+    ]
+    st.write("Update results data", result_updates)
     update_player_results(
         result_updates,
         database_lock,
     )
 
     # create rows
-    creates = changes[changes["create_result"] == True]
-    st.write("Create data", creates)
-    create_player_results(creates, lock=database_lock)
+    create_selections = changes[changes["create_selections"] == True]
+    st.write("Create selections data", create_selections)
+    create_player_selections(
+        create_selections,
+        database_lock,
+    )
+    create_results = changes[changes["create_results"] == True]
+    create_results.loc[:, "result_change"] = create_results[
+        ["goals", "green_card", "yellow_card", "red_card"]
+    ].sum(axis=1)
+    create_results = create_results[
+        (create_results["result_change"] != 0)
+        | (-create_results["result_change"].isna())
+    ]
+    st.write("Create results data", create_results)
+    create_player_results(create_results, lock=database_lock)
 
     # refresh data
     player_result = player_data(season, team_round, team)
@@ -290,7 +336,11 @@ def player_data(season: str, team_round: str, team: str) -> pd.DataFrame:
                 case
                     when r.id is null then true
                     else false
-                end as create_result,
+                end as create_results,
+                case
+                    when s.selection_id is null then true
+                    else false
+                end as create_selections,
                 g.opposition,
                 g.players_name,
                 g.players_grade,
@@ -343,8 +393,17 @@ def input_player_results(df: pd.DataFrame):
     player_id = df["player_id"]
     game_id = df["game_id"]
     selection_id = df["selection_id"]
-    create_result = df["create_result"]
-    _df = df.drop(columns=["player_id", "game_id", "selection_id", "create_result"])
+    create_results = df["create_results"]
+    create_selections = df["create_selections"]
+    _df = df.drop(
+        columns=[
+            "player_id",
+            "game_id",
+            "selection_id",
+            "create_results",
+            "create_selections",
+        ]
+    )
     with st.form("Player results"):
         result = st.data_editor(
             _df,
@@ -392,7 +451,8 @@ def input_player_results(df: pd.DataFrame):
         result.loc[:, "player_id"] = player_id
         result.loc[:, "game_id"] = game_id
         result.loc[:, "selection_id"] = selection_id
-        result.loc[:, "create_result"] = create_result
+        result.loc[:, "create_results"] = create_results
+        result.loc[:, "create_selections"] = create_selections
         result.loc[
             (result["goals"] > 0)
             | (result["green_card"] > 0)
@@ -422,17 +482,70 @@ def update_player_results(df: pd.DataFrame, lock: bool = True) -> None:
         st.error("Database is locked, contact the administrator.")
         return
     for _, row in df.iterrows():
-        update_data("selections", "played", row["selection_id"], row["played"])
-        update_data(
-            "selections", "goal_keeper", row["selection_id"], row["goal_keeper"]
-        )
         update_data("results", "goals", row["selection_id"], row["goals"])
         update_data("results", "red_card", row["selection_id"], row["red_card"])
         update_data("results", "yellow_card", row["selection_id"], row["yellow_card"])
         update_data("results", "green_card", row["selection_id"], row["green_card"])
 
 
+def update_player_selections(df: pd.DataFrame, lock: bool = True) -> None:
+    """Write the player updates to the database.
+
+    Args:
+        df (pd.DataFrame): The dataframe of updates to be made.
+        lock (bool, optional): True if the database lock is enabled. Defaults to True.
+
+    Returns: None
+    """
+    # TODO: Add validation
+    if lock:
+        st.error("Database is locked, contact the administrator.")
+        return
+    for _, row in df.iterrows():
+        update_data("selections", "played", row["selection_id"], row["played"])
+        update_data(
+            "selections", "goal_keeper", row["selection_id"], row["goal_keeper"]
+        )
+
+
 def create_player_results(df: pd.DataFrame, lock: bool = True) -> None:
+    """Create the player results in the database.
+
+    Args:
+        df (pd.DataFrame): The dataframe of rows to be created.
+        lock (bool, optional): True if the database lock is enabled. Defaults to True.
+
+    Returns: None
+    """
+    # TODO: Add validation
+    if lock:
+        st.error("Database is locked, contact the administrator.")
+        return
+    for _, row in df.iterrows():
+        create_data(
+            "results",
+            (
+                "id",
+                "create_ts",
+                "update_ts",
+                "goals",
+                "red_card",
+                "yellow_card",
+                "green_card",
+            ),
+            (
+                row["selection_id"],
+                str(add_timestamp()),
+                str(add_timestamp()),
+                row["goals"],
+                row["red_card"],
+                row["yellow_card"],
+                row["green_card"],
+            ),
+        )
+
+
+def create_player_selections(df: pd.DataFrame, lock: bool = True) -> None:
     """Create the player results in the database.
 
     Args:
@@ -467,26 +580,5 @@ def create_player_results(df: pd.DataFrame, lock: bool = True) -> None:
                 row["goal_keeper"],
                 row["selected"],
                 row["played"],
-            ),
-        )
-        create_data(
-            "results",
-            (
-                "id",
-                "create_ts",
-                "update_ts",
-                "goals",
-                "red_card",
-                "yellow_card",
-                "green_card",
-            ),
-            (
-                row["selection_id"],
-                str(add_timestamp()),
-                str(add_timestamp()),
-                row["goals"],
-                row["red_card"],
-                row["yellow_card"],
-                row["green_card"],
             ),
         )

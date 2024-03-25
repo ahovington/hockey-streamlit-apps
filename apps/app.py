@@ -8,9 +8,9 @@ from finance.app import App as finance_app
 
 apps = {
     "Results": restults_app,
+    "Registrations": registrations_app,
     "Selections": selections_app,
     "Finance": finance_app,
-    "Registrations": registrations_app,
 }
 
 if __name__ == "__main__":
