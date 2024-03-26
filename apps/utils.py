@@ -210,7 +210,7 @@ def calculate_date_interval(
 
 
 def financial_string_formatting(input: Any):
-    return f"""${ input :.1f}"""
+    return f"""${ input :,.1f}"""
 
 
 def select_box_query(

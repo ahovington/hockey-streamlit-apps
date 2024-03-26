@@ -17,21 +17,14 @@ def ClubFeesOustanding() -> None:
     _invoices.loc[:, "due_date"] = pd.to_datetime(_invoices.loc[:, "due_date"])
 
     # Headline statistics
-    st.subheader("Overdue Club Fees", divider="green")
+    st.subheader("OVERDUE CLUB FEES", divider="green")
     overdue = _invoices[_invoices["due_date"] <= dt.datetime.now()]
-    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+    col1, _, _, _ = st.columns([1, 1, 1, 1])
     col1.metric(
-        "Net amount", financial_string_formatting(overdue["total_amount_due"].sum())
-    )
-    col2.metric(
-        "Gross amount", financial_string_formatting(overdue["amount_invoiced"].sum())
-    )
-    col3.metric(
-        "Discounts applied", financial_string_formatting(overdue["discount"].sum())
+        "Amount due", financial_string_formatting(overdue["total_amount_due"].sum())
     )
 
     # Table of overdue fees
-    st.subheader("OVERDUE CLUB FEES", divider="green")
     st.write("OVERDUE INVOICES", divider="green")
     st.dataframe(overdue, hide_index=True, use_container_width=True)
     st.write("PLAYERS WITH MULTIPLE INVOICES", divider="green")
@@ -60,12 +53,11 @@ def invoice_data() -> pd.DataFrame:
             p.full_name,
             r.grade,
             i.due_date,
+            i.amount - (i.discount + i.amount_credited + i.amount_paid) as total_amount_due,
             i.amount as amount_invoiced,
             i.discount,
             i.amount_paid,
-            i.amount_credited,
-            i.amount - (i.discount + i.amount_credited + i.amount_paid) as total_amount_due,
-            i.on_payment_plan
+            i.amount_credited
         from invoices as i
         inner join registrations as r
         on i.registration_id = r.id
@@ -108,12 +100,11 @@ def largest_over_due_debitors() -> pd.DataFrame:
 
         select
             p.full_name,
+            sum(i.amount - (i.discount + i.amount_credited + i.amount_paid)) as total_amount_due,
             sum(i.amount) as amount_invoiced,
             sum(i.discount) as discount,
             sum(i.amount_paid) as amount_paid,
-            sum(i.amount_credited) as amount_credited,
-            sum(i.amount - (i.discount + i.amount_credited + i.amount_paid)) as total_amount_due,
-            max(i.on_payment_plan::int)::boolean as on_payment_plan
+            sum(i.amount_credited) as amount_credited
         from invoices as i
         inner join registrations as r
         on i.registration_id = r.id

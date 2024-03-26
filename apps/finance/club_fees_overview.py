@@ -11,8 +11,9 @@ def ClubFeesOverview() -> None:
     Retuns: None
     """
     _, col2 = st.columns([3, 7])
+    config.app.seasons.sort(reverse=True)
     season = col2.selectbox(
-        "Season", config.app.seasons, index=1, placeholder="Select season..."
+        "Season", config.app.seasons, index=0, placeholder="Select season..."
     )
     st.subheader("Club Fee Overview", divider="green")
 
@@ -24,38 +25,48 @@ def ClubFeesOverview() -> None:
     if season:
         _invoices = invoices[invoices["season"] == season]
     _invoices = _invoices.drop(columns=["season"])
-    paid_on_time = _invoices[_invoices["amount_invoiced"] > 0].drop_duplicates(
-        subset=["registration_id"]
-    )
     # Headline statistics
-    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+    col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
     col1.metric(
+        "Total Fees", financial_string_formatting(_invoices["amount_invoiced"].sum())
+    )
+    col2.metric(
         "Fees collected",
         financial_string_formatting(_invoices["amount_paid"].sum()),
     )
+    col3.metric(
+        "Discounts applied", financial_string_formatting(_invoices["discount"].sum())
+    )
+    col4.metric(
+        "Credits applied",
+        financial_string_formatting(_invoices["amount_credited"].sum()),
+    )
+    col5.metric(
+        "Net amount outstanding",
+        financial_string_formatting(_invoices["amount_due"].sum()),
+    )
+
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+    rego_filter = ""
+    if season:
+        rego_filter = f"where season = '{ season }'"
+    paid_on_time = _invoices[_invoices["amount_invoiced"] > 0].drop_duplicates(
+        subset=["registration_id"]
+    )
+    col1.metric("Players invoiced", _invoices["registration_id"].nunique())
     col2.metric(
+        "Paid",
+        f"""
+            { paid_on_time[-paid_on_time['fully_paid_date'].isna()].shape[0] / paid_on_time.shape[0] :.1%}
+        """,
+    )
+    col3.metric(
         "Paid on time",
         f"""
             { paid_on_time["paid_early"].sum() / paid_on_time.shape[0] :.1%}
         """,
     )
-    col3.metric(
-        "Net amount outstanding",
-        financial_string_formatting(_invoices["amount_due"].sum()),
-    )
     col4.metric(
-        "Discounts applied", financial_string_formatting(_invoices["discount"].sum())
-    )
-    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
-    rego_filter = ""
-    if season:
-        rego_filter = f"where season = '{ season }'"
-    rego_count = read_data(
-        f"""select count(*) from registrations { rego_filter }"""
-    ).values
-    col1.metric("Registrations", rego_count)
-    col2.metric("Players invoiced", _invoices["registration_id"].nunique())
-    col3.metric(
         "Average fee collected",
         financial_string_formatting(
             _invoices["amount_paid"].sum() / _invoices["registration_id"].nunique()
@@ -149,13 +160,13 @@ def invoice_data() -> pd.DataFrame:
             i.invoice_sent,
             i.on_payment_plan,
             i.discount_applied,
-            i.amount as amount_invoiced,
             i.fully_paid_date,
             date_trunc('MONTH', i.fully_paid_date) as fully_paid_month,
-            i.discount,
-            i.amount_paid,
-            i.amount_credited,
             i.amount - (i.discount + i.amount_credited + i.amount_paid) as amount_due,
+            i.amount as amount_invoiced,
+            i.discount,
+            i.amount_paid as amount_paid,
+            i.amount_credited,
             i.lines
         from invoices as i
         inner join registrations as r
