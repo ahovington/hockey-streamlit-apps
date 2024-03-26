@@ -120,7 +120,7 @@ def Results(database_lock: bool, season: str) -> None:
     ].sum(axis=1)
     result_updates = result_updates[
         (result_updates["result_change"] != 0)
-        | (-result_updates["result_change"].isna())
+        & (-result_updates["result_change"].isna())
     ]
     st.write("Update results data", result_updates)
     update_player_results(
@@ -141,7 +141,7 @@ def Results(database_lock: bool, season: str) -> None:
     ].sum(axis=1)
     create_results = create_results[
         (create_results["result_change"] != 0)
-        | (-create_results["result_change"].isna())
+        & (-create_results["result_change"].isna())
     ]
     st.write("Create results data", create_results)
     create_player_results(create_results, lock=database_lock)
@@ -170,17 +170,31 @@ def game_data(
         filters.append(f"g.start_ts between '{ date_start }' and '{ date_end }'")
     df = read_data(
         f"""
+        with _selections as (
+            select
+                game_id,
+                sum(selected::int) as selected,
+                sum(played::int) as played
+            from selections
+            group by
+                game_id
+        )
+
         select
             g.id as game_id,
             t.team || ' - ' || t.grade as team_name,
             g.opposition,
             g.start_ts,
             g.round,
+            s.selected,
+            s.played,
             g.goals_for,
             g.goals_against
         from games as g
         inner join teams as t
         on g.team_id = t.id
+        left join _selections as s
+        on g.id = s.game_id
         where { ' '.join(filters) }
         order by
             t.team_order
@@ -201,6 +215,8 @@ def game_data(
             "opposition",
             "round",
             "game_time",
+            "selected",
+            "played",
             "goals_for",
             "goals_against",
         ]
@@ -234,7 +250,14 @@ def input_game_results(df: pd.DataFrame) -> pd.DataFrame:
                     default=0,
                 ),
             },
-            disabled=["team_name", "opposition", "round", "game_time"],
+            disabled=[
+                "team_name",
+                "opposition",
+                "round",
+                "game_time",
+                "selected",
+                "played",
+            ],
             use_container_width=True,
             hide_index=True,
         )

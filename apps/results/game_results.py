@@ -11,20 +11,31 @@ def GameResults() -> None:
     clean_query_params(["Application", "page", "Season", "Team", "Round"])
 
     _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
+    config.app.seasons.sort(reverse=True)
     season = select_box_query("Season", config.app.seasons, col2, "Select season...")
+    if not season:
+        season = config.app.seasons[0]
     team = select_box_query(
         "Team",
         read_data(
-            "select team || ' - ' || grade as team from teams order by team_order"
-        )["team"].values.tolist(),
+            f"""
+            select
+                distinct
+                team || ' - ' || grade as team_name,
+                team_order
+            from teams
+            where
+                season = '{season}'
+            order by
+                team_order
+        """
+        )
+        .loc[:, "team_name"]
+        .values.tolist(),
         col3,
         "Select team...",
     )
     game_round = select_box_query("Round", round_filter_data(), col4, "Select round...")
-
-    if not season:
-        st.warning("Pick a season from dropdown.")
-        return
 
     # Show filters applied
     filters_applied = []
