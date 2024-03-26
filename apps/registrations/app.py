@@ -3,11 +3,12 @@ import streamlit as st
 from utils import config, clean_query_params
 from auth import auth, login, register_user
 from .documentation import Documentation
+from .registration_overview import RegistrationOverview
 from .grade_assignments import GradeAssignments
 
 apps = {
     "Documentation": Documentation,
-    "Registrations Overview": Documentation,
+    "Registrations Overview": RegistrationOverview,
     "Grade Assignment": GradeAssignments,
 }
 
