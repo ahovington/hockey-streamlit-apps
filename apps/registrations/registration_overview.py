@@ -6,12 +6,12 @@ from utils import read_data
 
 
 def RegistrationOverview(*args) -> None:
-    rego_count = registration_count()
+    rego_counts = registration_count()
     rego_dates = registration_dates()
 
     # registration count
     get_bar_chart(
-        rego_count,
+        rego_counts,
         "season",
         "total_registrations",
         use_container_width=True,
@@ -34,13 +34,29 @@ def RegistrationOverview(*args) -> None:
     )
 
     # registrations pre season curve
+    pre_season_rego_curve = rego_curve_data(rego_dates, rego_counts)
+    get_line_chart(
+        pre_season_rego_curve,
+        "days_before_first_game",
+        "cummlative_registrations_percent",
+        "season",
+    )
+
+
+def rego_curve_data(rego_dates: pd.DataFrame, rego_counts: pd.DataFrame):
+    """_summary_
+
+    Args:
+        rego_dates (pd.DataFrame): Dataframe containing the registration dates data.
+        rego_counts (pd.DataFrame): Dataframe containing the registration counts data.
+    """
     pre_season_rego_curve = (
         rego_dates.groupby(["season", "days_before_first_game"])["id"]
         .count()
         .reset_index()
     )
     pre_season_rego_curve = pre_season_rego_curve.merge(
-        rego_count, on="season", how="inner"
+        rego_counts, on="season", how="inner"
     ).sort_values("days_before_first_game")
     pre_season_rego_curve.loc[:, "registrations_percent"] = (
         pre_season_rego_curve["id"] / pre_season_rego_curve["total_registrations"]
@@ -52,19 +68,8 @@ def RegistrationOverview(*args) -> None:
         .groupby("season")["cummlative_registrations_percent"]
         .cumsum()
     )
-    pre_season_rego_curve = pre_season_rego_curve.merge(
+    return pre_season_rego_curve.merge(
         cummulative_percent, left_index=True, right_index=True
-    )
-
-    get_line_chart(
-        pre_season_rego_curve[pre_season_rego_curve["season"] == "2023"],
-        "days_before_first_game",
-        "cummlative_registrations_percent",
-    )
-    get_line_chart(
-        pre_season_rego_curve[pre_season_rego_curve["season"] == "2024"],
-        "days_before_first_game",
-        "cummlative_registrations_percent",
     )
 
 
@@ -168,7 +173,11 @@ def registration_dates() -> pd.DataFrame:
 
 
 def get_line_chart(
-    data: pd.DataFrame, date_col: str, y_col: str, use_container_width: bool = True
+    data: pd.DataFrame,
+    date_col: str,
+    y_col: str,
+    by_group: str,
+    use_container_width: bool = True,
 ):
     hover = alt.selection_single(
         fields=[date_col],
@@ -179,10 +188,11 @@ def get_line_chart(
 
     lines = (
         alt.Chart(data)
-        .mark_line(color="green")
+        .mark_line()
         .encode(
             x=date_col,
             y=y_col,
+            color=alt.Color(by_group, scale={"range": ["#0d5903", "#1bcc04"]}),
         )
     )
 
