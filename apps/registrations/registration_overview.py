@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-from utils import read_data
+from utils import config, read_data
 
 
 def RegistrationOverview(*args) -> None:
@@ -33,28 +33,43 @@ def RegistrationOverview(*args) -> None:
         use_container_width=True,
     )
 
-    # registrations pre season curve
-    pre_season_rego_curve = rego_curve_data(rego_dates, rego_counts)
+    # registrations pre season curves
+    pre_season_rego_curve_by_season = rego_curve_data(rego_dates, rego_counts)
     get_line_chart(
-        pre_season_rego_curve,
+        pre_season_rego_curve_by_season,
         "days_before_first_game",
         "cummlative_registrations_percent",
         "season",
     )
 
+    config.app.seasons.sort(reverse=True)
+    season = st.selectbox(
+        "Season", config.app.seasons, index=0, placeholder="Select season..."
+    )
+    pre_season_rego_curve_by_team = rego_curve_data(
+        rego_dates[rego_dates["season"] == season], rego_counts, groupby_team=True
+    )
+    get_line_chart(
+        pre_season_rego_curve_by_team,
+        "days_before_first_game",
+        "cummlative_registrations_percent",
+        "team",
+    )
 
-def rego_curve_data(rego_dates: pd.DataFrame, rego_counts: pd.DataFrame):
+
+def rego_curve_data(
+    rego_dates: pd.DataFrame, rego_counts: pd.DataFrame, groupby_team: bool = False
+):
     """_summary_
 
     Args:
         rego_dates (pd.DataFrame): Dataframe containing the registration dates data.
         rego_counts (pd.DataFrame): Dataframe containing the registration counts data.
     """
-    pre_season_rego_curve = (
-        rego_dates.groupby(["season", "days_before_first_game"])["id"]
-        .count()
-        .reset_index()
-    )
+    by_group = ["season", "days_before_first_game"]
+    if groupby_team:
+        by_group += ["team"]
+    pre_season_rego_curve = rego_dates.groupby(by_group)["id"].count().reset_index()
     pre_season_rego_curve = pre_season_rego_curve.merge(
         rego_counts, on="season", how="inner"
     ).sort_values("days_before_first_game")
@@ -65,7 +80,9 @@ def rego_curve_data(rego_dates: pd.DataFrame, rego_counts: pd.DataFrame):
         pre_season_rego_curve.rename(
             columns={"registrations_percent": "cummlative_registrations_percent"}
         )
-        .groupby("season")["cummlative_registrations_percent"]
+        .groupby("team" if groupby_team else "season")[
+            "cummlative_registrations_percent"
+        ]
         .cumsum()
     )
     return pre_season_rego_curve.merge(
@@ -192,7 +209,7 @@ def get_line_chart(
         .encode(
             x=date_col,
             y=y_col,
-            color=alt.Color(by_group, scale={"range": ["#0d5903", "#1bcc04"]}),
+            color=alt.Color(by_group, scale={"range": ["#008000", "#2AAA8A"]}),
         )
     )
 
@@ -208,8 +225,8 @@ def get_line_chart(
             y=y_col,
             opacity=alt.condition(hover, alt.value(0.3), alt.value(0)),
             tooltip=[
-                alt.Tooltip(date_col, title="Date"),
-                alt.Tooltip(y_col, title="Price (AUD)"),
+                alt.Tooltip(date_col, title="Days before the first game"),
+                alt.Tooltip(y_col, title="Percent of players registered"),
             ],
         )
         .add_params(hover)

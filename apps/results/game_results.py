@@ -8,7 +8,7 @@ from utils import assets, config, read_data, select_box_query, clean_query_param
 
 def GameResults() -> None:
     """Display game results"""
-    clean_query_params(["Application", "page", "Season", "Team", "Round"])
+    clean_query_params(["Application", "Page", "Season", "Team", "Round"])
 
     _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     config.app.seasons.sort(reverse=True)

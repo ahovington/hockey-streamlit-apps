@@ -31,42 +31,41 @@ def ClubFeesOverview() -> None:
         "Total Fees", financial_string_formatting(_invoices["amount_invoiced"].sum())
     )
     col2.metric(
-        "Fees collected",
-        financial_string_formatting(_invoices["amount_paid"].sum()),
-    )
-    col3.metric(
-        "Discounts applied", financial_string_formatting(_invoices["discount"].sum())
-    )
-    col4.metric(
-        "Credits applied",
-        financial_string_formatting(_invoices["amount_credited"].sum()),
-    )
-    col5.metric(
         "Net amount outstanding",
         financial_string_formatting(_invoices["amount_due"].sum()),
     )
+    col3.metric(
+        "Fees collected",
+        financial_string_formatting(_invoices["amount_paid"].sum()),
+    )
+    col4.metric("Discounts", financial_string_formatting(_invoices["discount"].sum()))
+    col5.metric(
+        "Credits / Sponsorships",
+        financial_string_formatting(_invoices["amount_credited"].sum()),
+    )
 
-    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
-    rego_filter = ""
-    if season:
-        rego_filter = f"where season = '{ season }'"
+    col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
     paid_on_time = _invoices[_invoices["amount_invoiced"] > 0].drop_duplicates(
         subset=["registration_id"]
     )
-    col1.metric("Players invoiced", _invoices["registration_id"].nunique())
+    col1.metric("Players invoiced", paid_on_time.shape[0])
     col2.metric(
-        "Paid",
+        "Players paid",
+        paid_on_time[paid_on_time["status"] == "PAID"].shape[0],
+    )
+    col3.metric(
+        "Invoices paid",
         f"""
             { paid_on_time[-paid_on_time['fully_paid_date'].isna()].shape[0] / paid_on_time.shape[0] :.1%}
         """,
     )
-    col3.metric(
-        "Paid on time",
+    col4.metric(
+        "Invoices paid on time",
         f"""
             { paid_on_time["paid_early"].sum() / paid_on_time.shape[0] :.1%}
         """,
     )
-    col4.metric(
+    col5.metric(
         "Average fee collected",
         financial_string_formatting(
             _invoices["amount_paid"].sum() / _invoices["registration_id"].nunique()
@@ -113,12 +112,12 @@ def ClubFeesOverview() -> None:
     )
 
     # discounts taken up
-    st.subheader("Invoices by discount type", divider="green")
-    collection_method = (
-        distinct_regos.groupby(["discount_applied"]).agg({"id": "count"}).reset_index()
-    )
-    collection_method.columns = ["discount applied", "registration count"]
-    get_bar_chart(collection_method, "discount applied", "registration count")
+    # st.subheader("Invoices by discount type", divider="green")
+    # collection_method = (
+    #     distinct_regos.groupby(["discount_applied"]).agg({"id": "count"}).reset_index()
+    # )
+    # collection_method.columns = ["discount applied", "registration count"]
+    # get_bar_chart(collection_method, "discount applied", "registration count")
 
     st.subheader("Detailed invoice table", divider="green")
     col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
@@ -184,6 +183,7 @@ def invoice_data() -> pd.DataFrame:
     """
     )
     df.loc[:, "invoice_description"] = df["lines"].str[0].str["Description"]
+    df = df[df["invoice_description"] != "Non paying player"]
     date_cols = ["due_date", "fully_paid_date", "fully_paid_month"]
     for date_col in date_cols:
         df.loc[:, date_col] = pd.to_datetime(df.loc[:, date_col], errors="coerce")

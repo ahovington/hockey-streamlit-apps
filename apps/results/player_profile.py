@@ -5,7 +5,7 @@ from utils import config, read_data, select_box_query, clean_query_params
 
 def PlayerProfile() -> None:
     """Display player results"""
-    clean_query_params(["Application", "page", "Player", "Season"])
+    clean_query_params(["Application", "Page", "Player", "Season"])
 
     _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     player_name = select_box_query(
