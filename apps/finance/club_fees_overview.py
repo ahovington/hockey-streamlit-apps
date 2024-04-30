@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 
-from utils import config, read_data, financial_string_formatting
+from utils import config, read_data, financial_string_formatting, clean_query_params
 
 
 def ClubFeesOverview() -> None:
@@ -10,6 +10,7 @@ def ClubFeesOverview() -> None:
 
     Retuns: None
     """
+    clean_query_params(["Application", "Page"])
     _, col2 = st.columns([3, 7])
     config.app.seasons.sort(reverse=True)
     season = col2.selectbox(
@@ -21,6 +22,7 @@ def ClubFeesOverview() -> None:
     if not invoices.shape[0]:
         st.warning("No invoices found")
         return
+
     _invoices = invoices.copy()
     if season:
         _invoices = invoices[invoices["season"] == season]
@@ -56,7 +58,7 @@ def ClubFeesOverview() -> None:
     col3.metric(
         "Invoices paid",
         f"""
-            { paid_on_time[-paid_on_time['fully_paid_date'].isna()].shape[0] / paid_on_time.shape[0] :.1%}
+            { paid_on_time[paid_on_time["status"] == "PAID"].shape[0] / paid_on_time.shape[0] :.1%}
         """,
     )
     col4.metric(
@@ -133,10 +135,18 @@ def ClubFeesOverview() -> None:
         index=None,
         placeholder="Select invoice type...",
     )
+    payment_plain = col3.selectbox(
+        "Payment plan",
+        [True, False],
+        index=None,
+        placeholder="Select option",
+    )
     if invoice_status:
         _invoices = _invoices[_invoices["status"] == invoice_status]
     if invoice_type:
         _invoices = _invoices[_invoices["invoice_description"] == invoice_type]
+    if payment_plain != None:
+        _invoices = _invoices[_invoices["on_payment_plan"] == payment_plain]
     st.write(_invoices)
 
 
@@ -147,39 +157,103 @@ def invoice_data() -> pd.DataFrame:
         pd.DataFrame: The results of the query.
     """
     df = read_data(
-        f"""
-        select
-            i.id,
-            p.full_name,
-            r.season,
-            r.id as registration_id,
-            i.status,
-            i.issued_date as registration_date,
-            i.due_date,
-            i.invoice_sent,
-            i.on_payment_plan,
-            i.discount_applied,
-            i.fully_paid_date,
-            date_trunc('MONTH', i.fully_paid_date) as fully_paid_month,
-            i.amount - (i.discount + i.amount_credited + i.amount_paid) as amount_due,
-            i.amount as amount_invoiced,
-            i.discount,
-            i.amount_paid as amount_paid,
-            i.amount_credited,
-            i.lines
-        from invoices as i
-        inner join registrations as r
-        on i.registration_id = r.id
-        inner join players as p
-        on i.player_id = p.id
+        """
+        with _invoices as (
+            select
+                i.id,
+                r.create_ts,
+                p.full_name,
+                r.season,
+                r.id as registration_id,
+                i.status,
+                i.issued_date as registration_date,
+                i.due_date,
+                i.invoice_sent,
+                i.on_payment_plan,
+                i.discount_applied,
+                i.fully_paid_date,
+                date_trunc('MONTH', i.fully_paid_date) as fully_paid_month,
+                i.amount - (i.discount + i.amount_credited + i.amount_paid) as amount_due,
+                i.amount as amount_invoiced,
+                i.discount,
+                i.amount_paid,
+                i.amount_credited,
+                i.lines
+            from invoices as i
+            inner join registrations as r
+            on i.registration_id = r.id
+            inner join players as p
+            on i.player_id = p.id
+        ),
+
+        agg_payment_plan as (
+            select
+                substring(id, 0, 15) as id,
+                on_payment_plan,
+                max(due_date) as due_date,
+                min(invoice_sent::int)::boolean as invoice_sent,
+                min(discount_applied::int)::boolean as discount_applied,
+                max(fully_paid_date) as fully_paid_date,
+                max(fully_paid_month) as fully_paid_month,
+                sum(amount_due) as amount_due,
+                sum(amount_invoiced) as amount_invoiced,
+                sum(discount) as discount,
+                sum(amount_paid) as amount_paid,
+                sum(amount_credited) amount_credited
+            from _invoices
+            where
+                status not in ('VOID', 'VOIDED', 'DELETED') and
+                on_payment_plan = true
+            group by
+                substring(id, 0, 15),
+                on_payment_plan
+        ),
+
+        join_orig_invoice as (
+            select
+                i.id,
+                i.create_ts,
+                i.full_name,
+                i.season,
+                i.registration_id,
+                case
+                    when pp.amount_due <= 0 then 'PAID'
+                    else (pp.amount_paid / (pp.amount_invoiced - (pp.discount + pp.amount_credited)) * 100)::text || '%% Paid'
+                end as status,
+                i.registration_date,
+                pp.due_date,
+                pp.invoice_sent,
+                pp.on_payment_plan,
+                pp.discount_applied,
+                pp.fully_paid_date,
+                pp.fully_paid_month,
+                pp.amount_due,
+                pp.amount_invoiced,
+                pp.discount,
+                pp.amount_paid,
+                pp.amount_credited,
+                i.lines
+            from _invoices as i
+            inner join agg_payment_plan as pp
+            on i.id = pp.id
+        )
+
+        select *
+        from _invoices
         where
-            i.status not in ('VOID', 'VOIDED', 'DELETED')
+            status not in ('VOID', 'VOIDED', 'DELETED') and
+            on_payment_plan = false
+
+        union all
+
+        select *
+        from join_orig_invoice
+
         order by
-            r.season,
-            i.due_date,
-            i.create_ts desc,
-            amount_due desc,
-            issued_date asc
+            season,
+            due_date,
+            create_ts desc,
+            amount_due desc
     """
     )
     df.loc[:, "invoice_description"] = df["lines"].str[0].str["Description"]

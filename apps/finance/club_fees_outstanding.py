@@ -10,8 +10,8 @@ def ClubFeesOustanding() -> None:
 
     Retuns: None
     """
-    _, col2 = st.columns([3, 7])
 
+    _, col2 = st.columns([3, 7])
     invoices = invoice_data()
     _invoices = invoices.copy()
     _invoices.loc[:, "due_date"] = pd.to_datetime(_invoices.loc[:, "due_date"])
@@ -91,7 +91,8 @@ def largest_over_due_debitors() -> pd.DataFrame:
             inner join players as p
             on i.player_id = p.id
             where
-                i.status not in ('PAID', 'VOID', 'VOIDED', 'DELETED')
+                i.status not in ('PAID', 'VOID', 'VOIDED', 'DELETED') and
+                i.on_payment_plan = false
             group by
                 p.id
             having
