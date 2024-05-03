@@ -65,7 +65,8 @@ def invoice_data() -> pd.DataFrame:
         on i.player_id = p.id
         where
             i.status not in ('PAID', 'VOID', 'VOIDED', 'DELETED') and
-            i.due_date < (current_date + INTERVAL'1 month')
+            i.due_date < (current_date + INTERVAL'1 month') and
+            i.on_payment_plan = false
         order by
             r.season,
             i.due_date,

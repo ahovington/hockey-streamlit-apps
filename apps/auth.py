@@ -13,7 +13,7 @@ def login(authenticator: stauth.Authenticate) -> bool:
     """
     authenticator.login(form_name="Login", location="main")
     if st.session_state["authentication_status"]:
-        authenticator.logout(button_name="Logout", location="main", key="unique_key")
+        authenticator.logout(button_name="Logout", location="sidebar", key="unique_key")
         _reset_password(authenticator)
         return True
     if st.session_state["authentication_status"] is False:
