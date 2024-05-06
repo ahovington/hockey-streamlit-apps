@@ -38,6 +38,11 @@ def ClubFeesOustanding() -> None:
         "",
         financial_string_formatting(upcoming["total_amount_due"].sum()),
     )
+    st.dataframe(
+        upcoming.groupby("grade").agg({"total_amount_due": ["sum", "count"]}).T,
+        hide_index=False,
+        use_container_width=True,
+    )
     st.dataframe(upcoming, hide_index=True, use_container_width=True)
 
 

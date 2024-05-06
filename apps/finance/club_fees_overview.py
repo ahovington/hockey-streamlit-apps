@@ -132,6 +132,7 @@ def invoice_table(df: pd.DataFrame):
         "full_name",
         "registration_id",
         "registration_date",
+        "grade",
         "due_date",
         "fully_paid_date",
         "status",
@@ -207,6 +208,10 @@ def invoice_table(df: pd.DataFrame):
     if paid_early != None:
         _df = _df[_df["paid_early"] == paid_early]
 
+    if not _df.shape[0]:
+        st.error("No invoices to show")
+        return
+
     with st.expander("Hero metrics"):
         hero_metrics(_df)
 
@@ -276,6 +281,7 @@ def invoice_data() -> pd.DataFrame:
                 r.id as registration_id,
                 i.status,
                 i.issued_date as registration_date,
+                r.grade,
                 i.due_date,
                 i.invoice_sent,
                 i.on_payment_plan,
@@ -328,6 +334,7 @@ def invoice_data() -> pd.DataFrame:
                     else (pp.amount_paid / (pp.amount_invoiced - (pp.discount + pp.amount_credited)) * 100)::text || '%% PAID'
                 end as status,
                 i.registration_date,
+                i.grade,
                 pp.due_date,
                 pp.invoice_sent,
                 pp.on_payment_plan,
@@ -370,6 +377,7 @@ def invoice_data() -> pd.DataFrame:
                 else status
             end as status,
             registration_date,
+            grade,
             due_date,
             invoice_sent,
             on_payment_plan,
