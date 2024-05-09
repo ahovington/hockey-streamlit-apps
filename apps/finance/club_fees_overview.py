@@ -1,3 +1,4 @@
+from typing import Any
 import pandas as pd
 import streamlit as st
 import altair as alt
@@ -151,39 +152,45 @@ def invoice_table(df: pd.DataFrame):
     st.subheader("Detailed invoice table", divider="green")
 
     # Table filters
-    col1, col2, col3 = st.columns([1, 1, 3])
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 3])
     invoice_status = col1.selectbox(
         "Status",
         df["status"].unique().tolist(),
         index=None,
         placeholder="Select status...",
     )
-    invoice_type = col2.selectbox(
+    grade = col2.selectbox(
+        "Grade",
+        df["grade"].unique().tolist(),
+        index=None,
+        placeholder="Select grade...",
+    )
+    invoice_type = col3.selectbox(
         "Invoice type",
         df["invoice_description"].unique().tolist(),
         index=None,
         placeholder="Select invoice type...",
     )
-    col31, col32, col33, col34 = col3.columns([1, 1, 1, 1])
-    invoice_sent = col31.selectbox(
+    col41, col42, col43, col44 = col4.columns([1, 1, 1, 1])
+    invoice_sent = col41.selectbox(
         "Invoice sent",
         [True, False],
         index=None,
         placeholder="Select option",
     )
-    discount_applied = col32.selectbox(
+    discount_applied = col42.selectbox(
         "Discount applied",
         [True, False],
         index=None,
         placeholder="Select option",
     )
-    on_payment_plan = col33.selectbox(
+    on_payment_plan = col43.selectbox(
         "On payment plan",
         [True, False],
         index=None,
         placeholder="Select option",
     )
-    paid_early = col34.selectbox(
+    paid_early = col44.selectbox(
         "Paid early",
         [True, False],
         index=None,
@@ -195,18 +202,18 @@ def invoice_table(df: pd.DataFrame):
     # Apply filters and show table
     _df = _df[COLUMN_ORDER].copy()
 
-    if invoice_status:
-        _df = _df[_df["status"] == invoice_status]
-    if invoice_type:
-        _df = _df[_df["invoice_description"] == invoice_type]
-    if invoice_sent != None:
-        _df = _df[_df["invoice_sent"] == invoice_sent]
-    if discount_applied != None:
-        _df = _df[_df["discount_applied"] == discount_applied]
-    if on_payment_plan != None:
-        _df = _df[_df["on_payment_plan"] == on_payment_plan]
-    if paid_early != None:
-        _df = _df[_df["paid_early"] == paid_early]
+    _df = apply_filters(
+        _df,
+        {
+            "status": invoice_status,
+            "invoice_description": invoice_type,
+            "invoice_sent": invoice_sent,
+            "discount_applied": discount_applied,
+            "on_payment_plan": on_payment_plan,
+            "paid_early": paid_early,
+            "grade": grade,
+        },
+    )
 
     if not _df.shape[0]:
         st.error("No invoices to show")
@@ -465,3 +472,11 @@ def get_bar_chart(
         .encode(x=alt.X(x_col).sort("-y"), y=y_col)
     )
     st.altair_chart(chart, use_container_width=use_container_width)
+
+
+def apply_filters(df: pd.DataFrame, columns_to_filter: dict[str, Any]) -> pd.DataFrame:
+    _df = df.copy()
+    for column, filter in columns_to_filter.items():
+        if filter != None:
+            _df = _df[_df[column] == filter]
+    return _df
