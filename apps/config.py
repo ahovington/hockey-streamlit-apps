@@ -17,6 +17,7 @@ class Config:
     class App:
         seasons: list[str]
         west_logo_url: str
+        logo_assets: dict[str, str]
         database_lock: bool = True
 
     @dataclass

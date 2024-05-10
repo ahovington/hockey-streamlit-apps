@@ -9,11 +9,24 @@ import streamlit as st
 
 from config import Config
 
+ASSET_URL_STEM = "https://hockey-assets.s3.ap-southeast-1.amazonaws.com/"
 
 config = Config(
     app=Config.App(
         seasons=["2023", "2024"],
-        west_logo_url="https://hockey-assets.s3.ap-southeast-1.amazonaws.com/wests.png",
+        west_logo_url=f"{ ASSET_URL_STEM }wests.png",
+        logo_assets={
+            "West": f"{ ASSET_URL_STEM }wests.png",
+            "University": f"{ ASSET_URL_STEM }university.jpeg",
+            "Tigers": f"{ ASSET_URL_STEM }tigers.png",
+            "Souths": f"{ ASSET_URL_STEM }souths.jpeg",
+            "Port Stephens": f"{ ASSET_URL_STEM }port_stephens.jpeg",
+            "Norths": f"{ ASSET_URL_STEM }norths.jpeg",
+            "Maitland": f"{ ASSET_URL_STEM }maitland.png",
+            "Gosford": f"{ ASSET_URL_STEM }gosford.png",
+            "Crusaders": f"{ ASSET_URL_STEM }crusaders.png",
+            "Colts": f"{ ASSET_URL_STEM }colts.png",
+        },
         database_lock=False,
     ),
     database=Config.Database(
@@ -27,28 +40,6 @@ config = Config(
 )
 
 engine = create_engine(config.database.db_url())
-
-
-asset_url_stem = "https://hockey-assets.s3.ap-southeast-1.amazonaws.com/"
-assets = {
-    "West Green": f"{ asset_url_stem }wests.png",
-    "West Red": f"{ asset_url_stem }wests.png",
-    "West": f"{ asset_url_stem }wests.png",
-    "University": f"{ asset_url_stem }university.jpeg",
-    "University Trains": f"{ asset_url_stem }university.jpeg",
-    "Tigers": f"{ asset_url_stem }tigers.png",
-    "Tiger": f"{ asset_url_stem }tigers.png",
-    "Souths": f"{ asset_url_stem }souths.jpeg",
-    "Port Stephens": f"{ asset_url_stem }port_stephens.jpeg",
-    "Norths Dark": f"{ asset_url_stem }norths.jpeg",
-    "Norths Light": f"{ asset_url_stem }norths.jpeg",
-    "Norths": f"{ asset_url_stem }norths.jpeg",
-    "North": f"{ asset_url_stem }norths.jpeg",
-    "Maitland": f"{ asset_url_stem }maitland.png",
-    "Gosford": f"{ asset_url_stem }gosford.png",
-    "Crusaders": f"{ asset_url_stem }crusaders.png",
-    "Colts": f"{ asset_url_stem }colts.png",
-}
 
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits) -> str:

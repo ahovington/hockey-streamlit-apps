@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_calendar import calendar
 
-from utils import assets, config, read_data, select_box_query, clean_query_params
+from utils import config, read_data, select_box_query, clean_query_params
 
 
 def GameResults() -> None:
@@ -177,10 +177,10 @@ def results_tile(df: pd.DataFrame):
                 row["grade"],
                 row["location_name"],
                 row["field"],
-                assets.get(row["team"]),
+                config.app.logo_assets.get(team_name_clean(row["team"])),
                 row["team"],
                 row["goals_for"],
-                assets.get(row["opposition"]),
+                config.app.logo_assets.get(team_name_clean(row["opposition"])),
                 row["goals_against"],
                 row["opposition"],
             )
@@ -294,3 +294,29 @@ def results_table(df: pd.DataFrame):
     """
     _results = df.drop(columns=["id", "team", "grade", "finals", "win", "loss", "draw"])
     st.dataframe(_results, hide_index=True, use_container_width=True)
+
+
+def team_name_clean(team_name: str) -> str:
+    _team_name = team_name.upper()
+    if "WEST" in _team_name:
+        return "West"
+    if "UNI" in _team_name:
+        return "University"
+    if "TIGER" in _team_name:
+        return "Tigers"
+    if "SOUTH" in _team_name:
+        return "Souths"
+    if "UNI" in _team_name:
+        return "University"
+    if "PORT" in _team_name:
+        return "Port Stephens"
+    if "NORTH" in _team_name:
+        return "Norths"
+    if "MAITLAND" in _team_name:
+        return "Maitland"
+    if "GOSFORD" in _team_name:
+        return "Gosford"
+    if "CRUSADER" in _team_name:
+        return "Crusaders"
+    if "COLT" in _team_name:
+        return "Colts"
