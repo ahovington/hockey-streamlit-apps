@@ -43,8 +43,9 @@ def GradeAssignments(database_lock: bool, season: str) -> None:
         if player.shape[0]:
             teams_table(player)
 
-    updated_player = input_player_team_table(player, team["full_team_name"].unique())
-    player_changes = compare_dataframes(player, updated_player, "registration_id")
+    _player = player.drop(columns=["team_order"], axis=1)
+    updated_player = input_player_team_table(_player, team["full_team_name"].unique())
+    player_changes = compare_dataframes(_player, updated_player, "registration_id")
 
     if player_changes.shape[0]:
         st.write("Update player data", player_changes)
@@ -159,10 +160,13 @@ def player_data(season: str) -> pd.DataFrame:
             r.id as registration_id,
             p.full_name as players_name,
             r.team,
-            r.grade
+            r.grade,
+            t.team_order
         from players as p
         inner join registrations as r
         on p.id = r.player_id
+        left join teams as t
+        on t.id = r.team_id
         where
             r.season = '{ season }'
         order by
@@ -256,12 +260,19 @@ def teams_table(df: pd.DataFrame) -> None:
     # Calculate output table column order
     df = df[~df["team"].isna()]
     df.loc[:, "selection_no"] = (df.groupby(["team"]).cumcount()) + 1
-    # st.table(df.groupby(["players_name"]).count())
 
+    col_order = (
+        df[["team", "team_order"]]
+        .drop_duplicates()
+        .sort_values("team_order")["team"]
+        .values
+    )
     st.table(
         df.pivot(
             columns="team",
             values="players_name",
             index="selection_no",
-        ).fillna("")
+        )[
+            col_order
+        ].fillna("")
     )
