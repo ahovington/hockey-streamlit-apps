@@ -2,10 +2,11 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
+from config import Config
 from utils import compare_dataframes, read_data, update_data
 
 
-def GradeAssignments(database_lock: bool, season: str) -> None:
+def GradeAssignments(config: Config, database_lock: bool, season: str) -> None:
     """Assign registered players to a grade.
 
     Args:

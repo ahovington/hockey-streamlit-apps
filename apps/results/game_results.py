@@ -3,10 +3,11 @@ import pandas as pd
 import streamlit as st
 from streamlit_calendar import calendar
 
-from utils import config, read_data, select_box_query, clean_query_params
+from config import Config
+from utils import read_data, select_box_query, clean_query_params
 
 
-def GameResults() -> None:
+def GameResults(config: Config) -> None:
     """Display game results"""
     clean_query_params(["Application", "Page", "Season", "Team", "Round"])
 
@@ -66,7 +67,7 @@ def GameResults() -> None:
     _, col2 = st.columns([3, 7], gap="small")
     view = col2.selectbox("Results layout", ["Tiles", "Calendar", "Table"])
 
-    result_views.get(view, "Tiles")(game_results)
+    result_views.get(view, "Tiles")(config, game_results)
 
 
 def round_filter_data():
@@ -161,7 +162,7 @@ def game_results_data(
     return df
 
 
-def results_tile(df: pd.DataFrame):
+def results_tile(config: Config, df: pd.DataFrame):
     """Display results in a tiled view
 
     args:
@@ -233,7 +234,7 @@ def results_layout(
     )
 
 
-def results_calendar(df: pd.DataFrame):
+def results_calendar(config: Config, df: pd.DataFrame):
     """Display results in a calendar list
 
     args:
@@ -286,7 +287,7 @@ def _calendar_config(events: dict, options: dict):
     )
 
 
-def results_table(df: pd.DataFrame):
+def results_table(config: Config, df: pd.DataFrame):
     """Display results in a table
 
     args:

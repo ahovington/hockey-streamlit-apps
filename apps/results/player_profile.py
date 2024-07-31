@@ -1,9 +1,10 @@
 import streamlit as st
 
-from utils import config, read_data, select_box_query, clean_query_params
+from config import Config
+from utils import read_data, select_box_query, clean_query_params
 
 
-def PlayerProfile() -> None:
+def PlayerProfile(config: Config) -> None:
     """Display player results"""
     clean_query_params(["Application", "Page", "Player", "Season"])
 

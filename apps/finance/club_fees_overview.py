@@ -3,10 +3,11 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 
-from utils import config, read_data, financial_string_formatting, clean_query_params
+from config import Config
+from utils import read_data, financial_string_formatting, clean_query_params
 
 
-def ClubFeesOverview() -> None:
+def ClubFeesOverview(config: Config) -> None:
     """Summarise outstanding payments.
 
     Retuns: None

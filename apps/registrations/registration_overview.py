@@ -2,10 +2,11 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-from utils import config, read_data
+from config import Config
+from utils import read_data
 
 
-def RegistrationOverview(*args) -> None:
+def RegistrationOverview(config: Config, *args) -> None:
     rego_counts = registration_count()
     rego_dates = registration_dates()
 

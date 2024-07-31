@@ -1,6 +1,7 @@
 import streamlit as st
 
-from utils import config, clean_query_params
+from config import Config
+from utils import clean_query_params
 from auth import auth, login, register_user
 from .documentation import Documentation
 from .registration_overview import RegistrationOverview
@@ -13,7 +14,7 @@ apps = {
 }
 
 
-def App():
+def App(config: Config):
     clean_query_params(["Application"])
     with st.sidebar:
         config.app.seasons.sort(reverse=True)
@@ -29,7 +30,7 @@ def App():
     if login(authenticator):
         APP_NAME = tuple(apps.keys())[0]
         APP_NAME = col2.selectbox("Select page", list(apps.keys()))
-        apps[APP_NAME](database_lock, season)
+        apps[APP_NAME](config, database_lock, season)
     else:
         with st.expander("Create login"):
             register_user(authenticator)

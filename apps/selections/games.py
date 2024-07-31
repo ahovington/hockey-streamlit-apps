@@ -2,8 +2,8 @@ import datetime as dt
 import streamlit as st
 import pandas as pd
 
+from config import Config
 from utils import (
-    config,
     add_timestamp,
     compare_dataframes,
     create_data,
@@ -12,7 +12,7 @@ from utils import (
 )
 
 
-def Games(database_lock: bool, season: str) -> None:
+def Games(config: Config, database_lock: bool, season: str) -> None:
     """Record game and players results.
 
     Args:

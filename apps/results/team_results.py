@@ -1,10 +1,11 @@
 import pandas as pd
 import streamlit as st
 
-from utils import config, read_data, select_box_query, clean_query_params
+from config import Config
+from utils import read_data, select_box_query, clean_query_params
 
 
-def TeamResults() -> None:
+def TeamResults(config: Config) -> None:
     """Display game results"""
     clean_query_params(["Application", "Page", "Season"])
 

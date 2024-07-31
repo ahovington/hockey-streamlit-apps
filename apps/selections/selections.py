@@ -3,8 +3,8 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
+from config import Config
 from utils import (
-    config,
     add_timestamp,
     calculate_date_interval,
     compare_dataframes,
@@ -14,7 +14,7 @@ from utils import (
 )
 
 
-def Selections(database_lock: bool, season: str) -> None:
+def Selections(config: Config, database_lock: bool, season: str) -> None:
     """The selections page of the App
 
     Args:
@@ -60,6 +60,7 @@ def Selections(database_lock: bool, season: str) -> None:
 
         if selected.shape[0]:
             output_selections_table(
+                config,
                 selected,
                 [
                     "round",
@@ -209,7 +210,7 @@ def selections_output_data(
 
 
 def output_selections_table(
-    df: pd.DataFrame, header_fields: str, week_end: str
+    config: Config, df: pd.DataFrame, header_fields: str, week_end: str
 ) -> None:
     """Present the selections made for the week.
 

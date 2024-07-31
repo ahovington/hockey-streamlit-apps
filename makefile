@@ -28,6 +28,6 @@ requirements-test: requirements
 	( $(ACTIVATE_VENV) && pip3 install -r requirements-test.txt )
 
 
-run-local:
+run:
 	($(ACTIVATE_VENV) && streamlit run apps/app.py)
 .PHONY: run-app

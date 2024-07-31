@@ -2,10 +2,11 @@ import streamlit as st
 import datetime as dt
 import pandas as pd
 
+from config import Config
 from utils import read_data, financial_string_formatting
 
 
-def ClubFeesOustanding() -> None:
+def ClubFeesOustanding(config: Config) -> None:
     """Summarise outstanding payments.
 
     Retuns: None

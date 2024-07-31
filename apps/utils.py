@@ -7,47 +7,28 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 import streamlit as st
 
-from config import Config
+from config import Database
 
-ASSET_URL_STEM = "https://hockey-assets.s3.ap-southeast-1.amazonaws.com/"
 
-config = Config(
-    app=Config.App(
-        seasons=["2023", "2024"],
-        west_logo_url=f"{ ASSET_URL_STEM }wests.png",
-        logo_assets={
-            "West": f"{ ASSET_URL_STEM }wests.png",
-            "University": f"{ ASSET_URL_STEM }university.jpeg",
-            "Tigers": f"{ ASSET_URL_STEM }tigers.png",
-            "Souths": f"{ ASSET_URL_STEM }souths.jpeg",
-            "Port Stephens": f"{ ASSET_URL_STEM }port_stephens.jpeg",
-            "Norths": f"{ ASSET_URL_STEM }norths.jpeg",
-            "Maitland": f"{ ASSET_URL_STEM }maitland.png",
-            "Gosford": f"{ ASSET_URL_STEM }gosford.png",
-            "Crusaders": f"{ ASSET_URL_STEM }crusaders.png",
-            "Colts": f"{ ASSET_URL_STEM }colts.png",
-        },
-        database_lock=False,
+database = Database(
+    db_host=os.getenv(
+        "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"
     ),
-    database=Config.Database(
-        db_host=os.getenv(
-            "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"
-        ),
-        db_name=os.getenv("DB_NAME", "hockey_services"),
-        db_password=os.getenv("DB_PASSWORD", ""),
-        db_user=os.getenv("DB_USER", "ahovington"),
-    ),
+    db_name=os.getenv("DB_NAME", "hockey_services"),
+    db_password=os.getenv("DB_PASSWORD", ""),
+    db_user=os.getenv("DB_USER", "ahovington"),
 )
 
-engine = create_engine(config.database.db_url())
+
+engine = create_engine(database.db_url())
 
 
-def id_generator(size=6, chars=string.ascii_uppercase + string.digits) -> str:
+def id_generator(size=6, chars: str = string.ascii_uppercase + string.digits) -> str:
     """creaete random id
 
     Args:
         size (int, optional): The length of the id. Defaults to 6.
-        chars (_type_, optional): (
+        chars (str, optional): (
             The characters included in the id.
             Defaults to string.ascii_uppercase+string.digits.
         )
@@ -76,7 +57,11 @@ def read_data(sql_statement: str) -> pd.DataFrame:
 
 
 def create_data(
-    table: str, columns: tuple[str], values: tuple[Any], verbose: bool = False
+    table: str,
+    columns: tuple[str],
+    values: tuple[Any],
+    database_lock: bool = False,
+    verbose: bool = False,
 ) -> None:
     """Helper function to write a row of data to the database
 
@@ -84,11 +69,12 @@ def create_data(
         table (str): The table to write to.
         columns (tuple(str)): The columns to add a row for.
         values (tuple(Any)): The values to write.
+        database_lock (bool, optional): If the database has been locked.
         verbose (bool, optional): True to print the queries written to the database.
 
     Returns: None
     """
-    if config.app.database_lock:
+    if database_lock:
         st.error(
             "A hard lock has been applied to the databases. Contact the administrator."
         )
@@ -113,6 +99,7 @@ def update_data(
     row_id: str,
     value: Any,
     value_string_type: bool = False,
+    database_lock: bool = False,
     verbose: bool = False,
 ) -> None:
     """Helper function to update a row of data in the database
@@ -123,12 +110,13 @@ def update_data(
         row_id (str): The id of the record to update.
         value (Any): The new value.
         value_string_type (bool, optional): True if the value is of string type.
+        database_lock (bool, optional): If the database has been locked.
         verbose (bool, optional): True to print the queries written to the database.
 
     Returns: None
     """
     # TODO: Add user to the change
-    if config.app.database_lock and table != "users":
+    if database_lock and table != "users":
         st.error(
             "A hard lock has been applied to the databases. Contact the administrator."
         )
