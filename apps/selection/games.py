@@ -9,7 +9,7 @@ from utils import (
     create_data,
     update_data,
 )
-from selections.models import (
+from selection.models import (
     game_data,
     team_name_data,
     team_id_data,

@@ -7,73 +7,78 @@ from auth import logout
 
 load_dotenv(dotenv_path=Path(".env"))
 
-
+results_path = Path("result")
 results_game = st.Page(
-    page="results/game_results.py",
+    page=results_path / "game_results.py",
     title="Game Results",
     icon=":material/emoji_events:",
+    default=True,
 )
 results_team = st.Page(
-    page="results/team_results.py",
+    page=results_path / "team_results.py",
     title="Team Results",
     icon=":material/emoji_events:",
 )
 results_player = st.Page(
-    page="results/player_profile.py",
+    page=results_path / "player_profile.py",
     title="Player Profile",
     icon=":material/emoji_events:",
 )
 
+selections_path = Path("selection")
 selections_games = st.Page(
-    page="selections/games.py",
+    page=selections_path / "games.py",
     title="Enter Games",
     icon=":material/person_add:",
 )
 selections_players = st.Page(
-    page="selections/selections.py",
+    page=selections_path / "selections.py",
     title="Enter Selections",
     icon=":material/person_add:",
 )
 selections_results = st.Page(
-    page="selections/results.py",
+    page=selections_path / "results.py",
     title="Enter Results",
     icon=":material/person_add:",
 )
 
+registrations_path = Path("registration")
 registrations_summary = st.Page(
-    page="registrations/registration_overview.py",
+    page=registrations_path / "registration_overview.py",
     title="Registration Summary",
     icon=":material/app_registration:",
 )
 registrations_grade = st.Page(
-    page="registrations/grade_assignments.py",
+    page=registrations_path / "grade_assignments.py",
     title="Enter Grade Assignment",
     icon=":material/app_registration:",
 )
 
+finance_path = Path("finance")
 finance_overview = st.Page(
-    page="finance/club_fees_overview.py",
+    page=finance_path / "club_fees_overview.py",
     title="Fees Summary",
     icon=":material/bar_chart:",
 )
 finance_outstanding = st.Page(
-    page="finance/club_fees_outstanding.py",
+    page=finance_path / "club_fees_outstanding.py",
     title="Fees Outstanding",
     icon=":material/bar_chart:",
 )
 
+login_path = Path("login")
 login_page = st.Page(
-    page="login/login.py",
+    page=login_path / "login.py",
     title="Login",
     icon=":material/key:",
 )
 login_create_login = st.Page(
-    page="login/create_login.py",
+    page=login_path / "create_login.py",
     title="Create Login",
     icon=":material/key:",
 )
 login_reset_password = st.Page(
-    page="login/reset_password.py",
+    page=login_path / "reset_password.py",
     title="Reset Password",
     icon=":material/key:",
 )
@@ -107,7 +112,7 @@ if __name__ == "__main__":
     pg = st.navigation(navigation)
     st.logo(config.app.club_logo)
     col1, col2 = st.columns([1, 6], vertical_alignment="center", gap="medium")
-    col1.image(config.app.club_logo, use_column_width=True)
+    col1.image(config.app.club_logo, use_column_width=False, width=100)
     col2.title(
         config.app.club_name + " Hockey Club",
     )

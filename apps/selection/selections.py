@@ -12,7 +12,7 @@ from utils import (
     create_data,
     update_data,
 )
-from selections.models import (
+from selection.models import (
     last_game_date,
     selections_input_data,
     selections_output_data,

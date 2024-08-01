@@ -9,7 +9,7 @@ from utils import (
     create_data,
     update_data,
 )
-from selections.models import last_game_date, game_data, player_data
+from selection.models import last_game_date, game_data, player_data
 
 
 @auth_validation
