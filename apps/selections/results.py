@@ -7,9 +7,9 @@ from utils import (
     add_timestamp,
     compare_dataframes,
     create_data,
-    read_data,
     update_data,
 )
+from selections.models import last_game_date, game_data, player_data
 
 
 @auth_validation
@@ -27,15 +27,7 @@ def main(database_lock: bool = False, season: str = "2024") -> None:
     st.subheader("- Add the results, and cards given", divider="green")
 
     # Date end filter
-    max_date = read_data(
-        f"""
-        select max(start_ts) + INTERVAL '1 days' as max_ts
-        from games
-        where
-            season = '{ season }'
-            and start_ts < '{ dt.datetime.now() }'
-        """
-    ).iloc[0, 0]
+    max_date = last_game_date(season)
     col1, _, _ = st.columns(3)
     date_filter = col1.date_input(
         "Games for Week Ending",
@@ -158,79 +150,6 @@ def main(database_lock: bool = False, season: str = "2024") -> None:
     player_result = player_data(season, team_round, team)
 
 
-def game_data(
-    season: str, date_end: dt.datetime = None, date_inteval: int = 6
-) -> pd.DataFrame:
-    """Extact the game data for the week.
-
-    Args:
-        season (str): The hockey season, usually the calendar year.
-        date_end (dt.datetime): The end timestamp.
-        date_inteval (int, optional): How many days before the date_end to include. Defualts to 6.
-
-    Retuns:
-        pd.DataFrame: The results of the query.
-    """
-    filters = [f"g.season = '{ season }'"]
-    if date_end:
-        date_start = date_end - dt.timedelta(days=date_inteval)
-        filters.append("and")
-        filters.append(f"g.start_ts between '{ date_start }' and '{ date_end }'")
-    df = read_data(
-        f"""
-        with _selections as (
-            select
-                game_id,
-                sum(selected::int) as selected,
-                sum(played::int) as played
-            from selections
-            group by
-                game_id
-        )
-
-        select
-            g.id as game_id,
-            t.team || ' - ' || t.grade as team_name,
-            g.opposition,
-            g.start_ts,
-            g.round,
-            s.selected,
-            s.played,
-            g.goals_for,
-            g.goals_against
-        from games as g
-        inner join teams as t
-        on g.team_id = t.id
-        left join _selections as s
-        on g.id = s.game_id
-        where { ' '.join(filters) }
-        order by
-            t.team_order
-        """
-    ).replace("", None)
-    ### Format the game start time ###
-    df.loc[:, "game_time"] = pd.to_datetime(df.loc[:, "start_ts"]).dt.strftime(
-        "%a %d %B, %-I:%M %p"
-    )
-    ### game validation ###
-    if not df.dropna(subset=["game_id"]).shape[0]:
-        st.error(f"No game found for week ending { date_end }")
-        return pd.DataFrame()
-    return df[
-        [
-            "game_id",
-            "team_name",
-            "opposition",
-            "round",
-            "game_time",
-            "selected",
-            "played",
-            "goals_for",
-            "goals_against",
-        ]
-    ]
-
-
 def input_game_results(df: pd.DataFrame) -> pd.DataFrame:
     """Update the game results.
 
@@ -293,123 +212,6 @@ def update_game_results(df: pd.DataFrame, lock: bool = True) -> None:
     for _, row in df.iterrows():
         update_data("games", "goals_for", row["game_id"], row["goals_for"])
         update_data("games", "goals_against", row["game_id"], row["goals_against"])
-
-
-def player_data(season: str, team_round: str, team: str) -> pd.DataFrame:
-    """Extact the player data for the team and round.
-
-    Args:
-        season (str): The hockey season, usually the calendar year.
-        team_round (str): The teams round of the season.
-        team (str): The team results are being updated for.
-
-    Retuns:
-        pd.DataFrame: The results of the query.
-    """
-    df = read_data(
-        f"""
-        with _games as (
-            select
-                g.id as game_id,
-                t.id as team_id,
-                t.team_order,
-                t.team || ' - ' || t.grade as team_name,
-                g.round,
-                g.opposition,
-                g.start_ts
-            from games as g
-            inner join teams as t
-            on g.team_id = t.id
-            where
-                g.season = '{ season }'
-                and g.round = '{ team_round }'
-                and t.team || ' - ' || t.grade = '{ team }'
-        ),
-
-        _selections as (
-            select
-                s.id as selection_id,
-                s.player_id,
-                s.game_id,
-                g.team_id,
-                s.goal_keeper,
-                s.selected,
-                s.played
-            from selections as s
-            inner join _games as g
-            on s.game_id = g.game_id
-        ),
-
-        _registered_players as (
-            select
-                g.game_id,
-                p.id as player_id,
-                p.full_name as players_name,
-                r.grade as players_grade,
-                g.team_order,
-                g.team_name,
-                g.round,
-                g.opposition,
-                g.start_ts
-            from players as p
-            inner join registrations as r
-            on p.id = r.player_id
-            cross join _games as g
-            where
-                r.season = '{ season }'
-        ),
-
-        _played_games as (
-            select
-                coalesce(s.selection_id, g.game_id || g.player_id) as selection_id,
-                g.game_id,
-                g.player_id,
-                case
-                    when r.id is null then true
-                    else false
-                end as create_results,
-                case
-                    when s.selection_id is null then true
-                    else false
-                end as create_selections,
-                g.opposition,
-                g.players_name,
-                g.players_grade,
-                coalesce(s.selected, False) as selected,
-                coalesce(s.goal_keeper, False) as goal_keeper,
-                coalesce(s.played, False) as played,
-                coalesce(r.goals, 0) as goals,
-                coalesce(r.green_card, 0)  as green_card,
-                coalesce(r.yellow_card, 0)  as yellow_card,
-                coalesce(r.red_card, 0)  as red_card
-            from _registered_players as g
-            left join _selections as s
-            on
-                s.game_id = g.game_id
-                and s.player_id = g.player_id
-            left join results as r
-            on s.selection_id = r.id
-        )
-
-        select *
-        from _played_games
-        order by
-            selected desc,
-            goal_keeper desc,
-            players_grade desc
-        """
-    )
-    return df.astype(
-        {
-            "selected": bool,
-            "goal_keeper": bool,
-            "played": bool,
-            "goals": int,
-            "green_card": int,
-            "yellow_card": int,
-            "red_card": int,
-        }
-    )
 
 
 def input_player_results(df: pd.DataFrame):

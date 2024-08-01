@@ -7,8 +7,16 @@ from utils import (
     add_timestamp,
     compare_dataframes,
     create_data,
-    read_data,
     update_data,
+)
+from selections.models import (
+    game_data,
+    team_name_data,
+    team_id_data,
+    grade_name_data,
+    location_name_data,
+    location_id_data,
+    field_name_data,
 )
 
 
@@ -46,15 +54,10 @@ def main(database_lock: bool = False, season: str = "2024") -> None:
 
 def enter_game_data(season: str):
     # Enter data
-    team = st.selectbox(
-        "Team",
-        read_data(f"""select distinct team from teams where season = '{season}'"""),
-    )
-    grade = st.selectbox(
-        "Grade", read_data(f"""select grade from teams where season = '{season}'""")
-    )
-    location = st.selectbox("Location", read_data("""select name from locations"""))
-    field = st.selectbox("Field", read_data("""select field from locations"""))
+    team = st.selectbox("Team", team_name_data(season))
+    grade = st.selectbox("Grade", grade_name_data(season))
+    location = st.selectbox("Location", location_name_data())
+    field = st.selectbox("Field", field_name_data())
     round = st.text_input("Round")
     opposition = st.text_input("Opposition")
     date = st.date_input("Game date")
@@ -63,12 +66,8 @@ def enter_game_data(season: str):
 
     # Transform inputs
     id = f"{season}{grade}{team}{round}"
-    team_id = read_data(
-        f"""select id from teams where season = '{season}' and team = '{team}' and grade = '{grade}'"""
-    ).iloc[0, 0]
-    location_id = read_data(
-        f"""select id from locations where name = '{location}' and field = '{field}'"""
-    ).iloc[0, 0]
+    team_id = team_id_data(season, team, grade)
+    location_id = location_id_data(location, field)
     start_ts = dt.datetime(
         date.year, date.month, date.day, start_time.hour, start_time.minute
     ).strftime("%Y-%m-%d %H:%M:%S")
@@ -86,11 +85,6 @@ def update_game_data(database_lock: bool, season: str):
     """
 
     all_game_result = game_data(season)
-    if not all_game_result.shape[0]:
-        return
-    all_game_result.loc[:, "start_ts"] = pd.to_datetime(
-        all_game_result.loc[:, "start_ts"]
-    )
     if not all_game_result.shape[0]:
         return
     updated_all_game_results = input_all_game_results(all_game_result)
@@ -144,70 +138,6 @@ def input_all_game_results(df: pd.DataFrame) -> pd.DataFrame:
     if not commit_changes:
         return df
     return result[df.columns].fillna({"goals_for": 0, "goals_against": 0})
-
-
-def game_data(
-    season: str, date_end: dt.datetime = None, date_inteval: int = 6
-) -> pd.DataFrame:
-    """Extact the game data for the week.
-
-    Args:
-        season (str): The hockey season, usually the calendar year.
-        date_end (dt.datetime): The end timestamp.
-        date_inteval (int, optional): How many days before the date_end to include. Defualts to 6.
-
-    Retuns:
-        pd.DataFrame: The results of the query.
-    """
-    filters = [f"g.season = '{ season }'"]
-    if date_end:
-        date_start = date_end - dt.timedelta(days=date_inteval)
-        filters.append("and")
-        filters.append(f"g.start_ts between '{ date_start }' and '{ date_end }'")
-    df = read_data(
-        f"""
-        select
-            g.create_ts,
-            g.update_ts,
-            g.id as game_id,
-            t.team || ' - ' || t.grade as team_name,
-            t.team_order,
-            g.opposition,
-            g.start_ts,
-            g.round,
-            case
-                when round = 'SF1' then '30'
-                when round = 'PF1' then '40'
-                when round = 'GF1' then '30'
-                else round
-            end as round_order,
-            g.goals_for,
-            g.goals_against
-        from games as g
-        inner join teams as t
-        on g.team_id = t.id
-        where { ' '.join(filters) }
-        """
-    ).replace("", None)
-    df.loc[:, "round_order"] = df.loc[:, "round_order"].astype(int)
-    df = df.sort_values(["team_order", "round_order"])
-    ### game validation ###
-    if not df.dropna(subset=["game_id"]).shape[0]:
-        st.error(f"No game found for week ending { date_end }")
-        return pd.DataFrame()
-    return df[
-        [
-            "create_ts",
-            "update_ts",
-            "game_id",
-            "team_name",
-            "opposition",
-            "round",
-            "start_ts",
-            "goals_for",
-            "goals_against",
-        ]
-    ]
 
 
 def write_game_data(
