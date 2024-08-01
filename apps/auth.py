@@ -60,15 +60,18 @@ def auth(roles: list[str]) -> stauth.Authenticate:
 AUTHENTICATOR = auth(config.app.user_groups)
 
 
-def login(authenticator: stauth.Authenticate = AUTHENTICATOR) -> bool:
-    """Login into app
-
-    Returns:
-        bool: The result of the login attempt, True if successful.
-    """
+def login(authenticator: stauth.Authenticate = AUTHENTICATOR):
+    """Login into app"""
+    st.session_state["authentication_status"] = False
     res = authenticator.login(form_name="Login", location="main")
-    if res[1] == False and not st.session_state.get("authentication_status", False):
+    if res[1] == False and not st.session_state["authentication_status"]:
         st.error("Username/password is incorrect")
+
+
+def logout(authenicator: stauth.Authenticate = AUTHENTICATOR):
+    """Log out of the app"""
+    st.session_state["logout"] = False
+    authenicator.logout(button_name="Logout", location="sidebar", key="unique_key")
 
 
 def reset_password(authenticator: stauth.Authenticate = AUTHENTICATOR) -> None:

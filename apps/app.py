@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 from config import config
+from auth import logout
 
 load_dotenv(dotenv_path=Path(".env"))
 
@@ -86,7 +87,8 @@ if __name__ == "__main__":
     )
 
     navigation: dict[str : list[st.Page]] = {}
-    navigation["Login"] = [login_page, login_create_login]
+    if not st.session_state.get("authentication_status", False):
+        navigation["Login"] = [login_page, login_create_login]
     navigation["Results"] = [results_game, results_team, results_player]
     navigation["Results"] = [results_game, results_team, results_player]
     navigation["Selections"] = [
@@ -96,12 +98,11 @@ if __name__ == "__main__":
     ]
     navigation["Registrations"] = [registrations_summary, registrations_grade]
     navigation["Finance"] = [finance_overview, finance_outstanding]
-    navigation["Reset Password"] = [login_reset_password]
+    if st.session_state.get("authentication_status", False):
+        navigation["Reset Password"] = [login_reset_password]
 
     if st.session_state.get("authentication_status", False):
-        config.app.create_st_auth.logout(
-            button_name="Logout", location="sidebar", key="unique_key"
-        )
+        logout()
 
     pg = st.navigation(navigation)
     st.logo(config.app.club_logo)
