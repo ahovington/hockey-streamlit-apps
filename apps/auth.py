@@ -62,7 +62,10 @@ AUTHENTICATOR = auth(config.app.user_groups)
 
 def login(authenticator: stauth.Authenticate = AUTHENTICATOR):
     """Login into app"""
+    # initalise session state variables
     st.session_state["authentication_status"] = False
+    st.session_state["username"] = None
+    st.session_state["name"] = None
     res = authenticator.login(form_name="Login", location="main")
     if res[1] == False and not st.session_state["authentication_status"]:
         st.error("Username/password is incorrect")
@@ -83,7 +86,7 @@ def reset_password(authenticator: stauth.Authenticate = AUTHENTICATOR) -> None:
     if authenticator.reset_password(
         form_name="Reset password",
         username=st.session_state["username"],
-        location="sidebar",
+        location="main",
     ):
         st.success("Password modified successfully")
         _update_config(authenticator)
