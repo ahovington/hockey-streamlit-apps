@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 
 from utils import (
+    auth_validation,
     add_timestamp,
     compare_dataframes,
     create_data,
@@ -11,6 +12,7 @@ from utils import (
 )
 
 
+@auth_validation
 def main(database_lock: bool = False, season: str = "2024") -> None:
     """Record game and players results.
 

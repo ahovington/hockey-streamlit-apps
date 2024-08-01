@@ -4,9 +4,15 @@ import streamlit as st
 import altair as alt
 
 from config import config
-from utils import read_data, financial_string_formatting, clean_query_params
+from utils import (
+    auth_validation,
+    read_data,
+    financial_string_formatting,
+    clean_query_params,
+)
 
 
+@auth_validation
 def main() -> None:
     """Summarise outstanding payments.
 

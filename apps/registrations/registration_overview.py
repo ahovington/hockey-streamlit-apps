@@ -3,9 +3,10 @@ import pandas as pd
 import altair as alt
 
 from config import config
-from utils import read_data
+from utils import auth_validation, read_data
 
 
+@auth_validation
 def main() -> None:
     rego_counts = registration_count()
     rego_dates = registration_dates()

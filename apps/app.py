@@ -4,9 +4,6 @@ from pathlib import Path
 
 from config import config
 
-# from utils import select_box_query
-
-
 load_dotenv(dotenv_path=Path(".env"))
 
 
@@ -64,6 +61,22 @@ finance_outstanding = st.Page(
     icon=":material/bar_chart:",
 )
 
+login_page = st.Page(
+    page="login/login.py",
+    title="Login",
+    icon=":material/key:",
+)
+login_create_login = st.Page(
+    page="login/create_login.py",
+    title="Create Login",
+    icon=":material/key:",
+)
+login_reset_password = st.Page(
+    page="login/reset_password.py",
+    title="Reset Password",
+    icon=":material/key:",
+)
+
 if __name__ == "__main__":
     st.set_page_config(
         page_title="Newcastle West Hockey",
@@ -72,15 +85,25 @@ if __name__ == "__main__":
         initial_sidebar_state="auto",
     )
 
-    pg = st.navigation(
-        {
-            "Results": [results_game, results_team, results_player],
-            "Selections": [selections_games, selections_players, selections_results],
-            "Registrations": [registrations_summary, registrations_grade],
-            "Finance": [finance_overview, finance_outstanding],
-        }
-    )
+    navigation: dict[str : list[st.Page]] = {}
+    navigation["Login"] = [login_page, login_create_login]
+    navigation["Results"] = [results_game, results_team, results_player]
+    navigation["Results"] = [results_game, results_team, results_player]
+    navigation["Selections"] = [
+        selections_games,
+        selections_players,
+        selections_results,
+    ]
+    navigation["Registrations"] = [registrations_summary, registrations_grade]
+    navigation["Finance"] = [finance_overview, finance_outstanding]
+    navigation["Reset Password"] = [login_reset_password]
 
+    if st.session_state.get("authentication_status", False):
+        config.app.create_st_auth.logout(
+            button_name="Logout", location="sidebar", key="unique_key"
+        )
+
+    pg = st.navigation(navigation)
     st.logo(config.app.club_logo)
     col1, col2 = st.columns([1, 6], vertical_alignment="center", gap="medium")
     col1.image(config.app.club_logo, use_column_width=True)
@@ -90,7 +113,3 @@ if __name__ == "__main__":
     st.sidebar.text("Maintained by Alastair 🧑🏻‍💻")
 
     pg.run()
-
-    # with st.sidebar:
-    #     app_name = select_box_query("Application", tuple(apps.keys()), st)
-    # apps[app_name](config)

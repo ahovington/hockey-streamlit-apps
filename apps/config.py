@@ -1,7 +1,5 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from urllib.parse import quote_plus
-from sqlalchemy import create_engine, Engine
 
 
 @dataclass
@@ -14,31 +12,8 @@ class Config:
         club_name: str
         club_logo: str
         logo_assets: dict[str, str]
+        user_groups: list[str]
         database_lock: bool = True
-
-
-@dataclass
-class Database:
-    db_host: str
-    db_name: str
-    db_password: str
-    db_user: str
-
-    def db_url(self) -> str:
-        """Generate the url of the database.
-
-        Returns:
-            str: The database url.
-        """
-        return f"""postgresql://{ self.db_user }:{ quote_plus(self.db_password) }@{ self.db_host}/{ self.db_name }"""
-
-    def create_db_engine(self) -> Engine:
-        """Create database engine
-
-        Returns:
-            Engine: Database engine.
-        """
-        return create_engine(self.db_url())
 
 
 ASSET_URL_STEM = "https://hockey-assets.s3.ap-southeast-1.amazonaws.com/"
@@ -61,6 +36,7 @@ config = Config(
             "Crusaders": f"{ ASSET_URL_STEM }crusaders.png",
             "Colts": f"{ ASSET_URL_STEM }colts.png",
         },
+        user_groups=["admin", "committee_member", "collector"],
         database_lock=False,
     ),
 )

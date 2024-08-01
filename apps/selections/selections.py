@@ -5,6 +5,7 @@ import pandas as pd
 
 from config import config
 from utils import (
+    auth_validation,
     add_timestamp,
     calculate_date_interval,
     compare_dataframes,
@@ -14,6 +15,7 @@ from utils import (
 )
 
 
+@auth_validation
 def main(database_lock: bool = False, season: str = "2024") -> None:
     """The selections page of the App
 

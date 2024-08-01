@@ -2,9 +2,10 @@ import streamlit as st
 import datetime as dt
 import pandas as pd
 
-from utils import read_data, financial_string_formatting
+from utils import auth_validation, read_data, financial_string_formatting
 
 
+@auth_validation
 def main() -> None:
     """Summarise outstanding payments.
 

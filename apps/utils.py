@@ -1,13 +1,37 @@
 import os
 import string
 import random
+from dataclasses import dataclass
+from urllib.parse import quote_plus
 from typing import Any
 import datetime as dt
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import Engine, create_engine, text
 import streamlit as st
 
-from config import Database
+
+@dataclass
+class Database:
+    db_host: str
+    db_name: str
+    db_password: str
+    db_user: str
+
+    def db_url(self) -> str:
+        """Generate the url of the database.
+
+        Returns:
+            str: The database url.
+        """
+        return f"""postgresql://{ self.db_user }:{ quote_plus(self.db_password) }@{ self.db_host}/{ self.db_name }"""
+
+    def create_db_engine(self) -> Engine:
+        """Create database engine
+
+        Returns:
+            Engine: Database engine.
+        """
+        return create_engine(self.db_url())
 
 
 database = Database(
@@ -21,6 +45,16 @@ database = Database(
 
 
 engine = create_engine(database.db_url())
+
+
+def auth_validation(func):
+    def wrapper():
+        if st.session_state.get("authentication_status", False):
+            return func()
+        st.warning("Login to access this page")
+        return
+
+    return wrapper
 
 
 def id_generator(size=6, chars: str = string.ascii_uppercase + string.digits) -> str:

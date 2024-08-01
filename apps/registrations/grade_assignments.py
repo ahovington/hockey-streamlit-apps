@@ -2,10 +2,11 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-from utils import compare_dataframes, read_data, update_data
+from utils import auth_validation, compare_dataframes, read_data, update_data
 
 
 # TODO: Need to remove these args and pass through the config
+@auth_validation
 def main(database_lock: bool = False, season: str = "2024") -> None:
     """Assign registered players to a grade.
 
