@@ -66,8 +66,8 @@ def login(authenticator: stauth.Authenticate = AUTHENTICATOR) -> bool:
     Returns:
         bool: The result of the login attempt, True if successful.
     """
-    res = AUTHENTICATOR.login(form_name="Login", location="main")
-    if res[1] == False and not st.session_state["authentication_status"]:
+    res = authenticator.login(form_name="Login", location="main")
+    if res[1] == False and not st.session_state.get("authentication_status", False):
         st.error("Username/password is incorrect")
 
 
