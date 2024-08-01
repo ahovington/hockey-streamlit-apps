@@ -2,7 +2,6 @@ import datetime as dt
 import streamlit as st
 import pandas as pd
 
-from config import Config
 from utils import (
     add_timestamp,
     compare_dataframes,
@@ -12,7 +11,7 @@ from utils import (
 )
 
 
-def Games(config: Config, database_lock: bool, season: str) -> None:
+def main(database_lock: bool = False, season: str = "2024") -> None:
     """Record game and players results.
 
     Args:
@@ -276,3 +275,6 @@ def update_game_results(df: pd.DataFrame, lock: bool = True) -> None:
         )
         update_data("games", "goals_for", row["game_id"], row["goals_for"])
         update_data("games", "goals_against", row["game_id"], row["goals_against"])
+
+
+main()

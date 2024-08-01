@@ -25,7 +25,7 @@ def App(config: Config):
         season = st.selectbox("Season", config.app.seasons)
 
     col1, col2 = st.columns([3, 7])
-    col1.image(config.app.west_logo_url)
+    col1.image(config.app.club_logo)
     col2.title("West Hockey Newcastle Selections")
 
     authenticator = auth(["admin", "committee_member", "team_manager", "selector"])

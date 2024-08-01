@@ -3,13 +3,13 @@ import pandas as pd
 import streamlit as st
 from streamlit_calendar import calendar
 
-from config import Config
-from utils import read_data, select_box_query, clean_query_params
+from utils import read_data, select_box_query, clean_query_params, team_name_clean
+from config import config
 
 
-def GameResults(config: Config) -> None:
+def main() -> None:
     """Display game results"""
-    clean_query_params(["Application", "Page", "Season", "Team", "Round"])
+    # clean_query_params(["Application", "Page", "Season", "Team", "Round"])
 
     _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     config.app.seasons.sort(reverse=True)
@@ -67,7 +67,7 @@ def GameResults(config: Config) -> None:
     _, col2 = st.columns([3, 7], gap="small")
     view = col2.selectbox("Results layout", ["Tiles", "Calendar", "Table"])
 
-    result_views.get(view, "Tiles")(config, game_results)
+    result_views.get(view, "Tiles")(game_results)
 
 
 def round_filter_data():
@@ -162,7 +162,7 @@ def game_results_data(
     return df
 
 
-def results_tile(config: Config, df: pd.DataFrame):
+def results_tile(df: pd.DataFrame):
     """Display results in a tiled view
 
     args:
@@ -234,7 +234,7 @@ def results_layout(
     )
 
 
-def results_calendar(config: Config, df: pd.DataFrame):
+def results_calendar(df: pd.DataFrame):
     """Display results in a calendar list
 
     args:
@@ -287,7 +287,7 @@ def _calendar_config(events: dict, options: dict):
     )
 
 
-def results_table(config: Config, df: pd.DataFrame):
+def results_table(df: pd.DataFrame):
     """Display results in a table
 
     args:
@@ -297,27 +297,4 @@ def results_table(config: Config, df: pd.DataFrame):
     st.dataframe(_results, hide_index=True, use_container_width=True)
 
 
-def team_name_clean(team_name: str) -> str:
-    _team_name = team_name.upper()
-    if "WEST" in _team_name:
-        return "West"
-    if "UNI" in _team_name:
-        return "University"
-    if "TIGER" in _team_name:
-        return "Tigers"
-    if "SOUTH" in _team_name:
-        return "Souths"
-    if "UNI" in _team_name:
-        return "University"
-    if "PORT" in _team_name:
-        return "Port Stephens"
-    if "NORTH" in _team_name:
-        return "Norths"
-    if "MAITLAND" in _team_name:
-        return "Maitland"
-    if "GOSFORD" in _team_name:
-        return "Gosford"
-    if "CRUSADER" in _team_name:
-        return "Crusaders"
-    if "COLT" in _team_name:
-        return "Colts"
+main()

@@ -2,11 +2,11 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-from config import Config
 from utils import compare_dataframes, read_data, update_data
 
 
-def GradeAssignments(config: Config, database_lock: bool, season: str) -> None:
+# TODO: Need to remove these args and pass through the config
+def main(database_lock: bool = False, season: str = "2024") -> None:
     """Assign registered players to a grade.
 
     Args:
@@ -277,3 +277,6 @@ def teams_table(df: pd.DataFrame) -> None:
             col_order
         ].fillna("")
     )
+
+
+main()

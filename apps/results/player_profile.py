@@ -1,12 +1,12 @@
 import streamlit as st
 
-from config import Config
+from config import config
 from utils import read_data, select_box_query, clean_query_params
 
 
-def PlayerProfile(config: Config) -> None:
+def main() -> None:
     """Display player results"""
-    clean_query_params(["Application", "Page", "Player", "Season"])
+    # clean_query_params(["Application", "Page", "Player", "Season"])
 
     _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     player_name = select_box_query(
@@ -117,3 +117,6 @@ def player_data(player_name: str, season: str):
                 p.id
     """
     )
+
+
+main()

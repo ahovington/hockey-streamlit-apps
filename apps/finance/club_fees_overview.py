@@ -3,11 +3,11 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 
-from config import Config
+from config import config
 from utils import read_data, financial_string_formatting, clean_query_params
 
 
-def ClubFeesOverview(config: Config) -> None:
+def main() -> None:
     """Summarise outstanding payments.
 
     Retuns: None
@@ -481,3 +481,6 @@ def apply_filters(df: pd.DataFrame, columns_to_filter: dict[str, Any]) -> pd.Dat
         if filter != None:
             _df = _df[_df[column] == filter]
     return _df
+
+
+main()

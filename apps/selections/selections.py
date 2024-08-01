@@ -3,7 +3,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-from config import Config
+from config import config
 from utils import (
     add_timestamp,
     calculate_date_interval,
@@ -14,7 +14,7 @@ from utils import (
 )
 
 
-def Selections(config: Config, database_lock: bool, season: str) -> None:
+def main(database_lock: bool = False, season: str = "2024") -> None:
     """The selections page of the App
 
     Args:
@@ -60,7 +60,6 @@ def Selections(config: Config, database_lock: bool, season: str) -> None:
 
         if selected.shape[0]:
             output_selections_table(
-                config,
                 selected,
                 [
                     "round",
@@ -210,7 +209,7 @@ def selections_output_data(
 
 
 def output_selections_table(
-    config: Config, df: pd.DataFrame, header_fields: str, week_end: str
+    df: pd.DataFrame, header_fields: str, week_end: str
 ) -> None:
     """Present the selections made for the week.
 
@@ -292,7 +291,7 @@ def output_selections_table(
         return np.where(x in dup_players, f"background-color: {color};", None)
 
     col1, col2 = st.columns([3, 10])
-    col1.image(config.app.west_logo_url)
+    col1.image(config.app.club_logo)
     col2.title(f"West Hockey Selections, for the week ending { week_end }")
     st.table(
         pivot_selections.style.applymap(
@@ -569,3 +568,6 @@ def create_selection(df: pd.DataFrame, lock: bool = True) -> None:
                 row["selected"],
             ),
         )
+
+
+main()

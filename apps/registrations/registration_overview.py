@@ -2,11 +2,11 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-from config import Config
+from config import config
 from utils import read_data
 
 
-def RegistrationOverview(config: Config, *args) -> None:
+def main() -> None:
     rego_counts = registration_count()
     rego_dates = registration_dates()
 
@@ -250,3 +250,6 @@ def get_bar_chart(
         .encode(x=alt.X(x_col).sort("-y"), y=y_col)
     )
     st.altair_chart(chart, use_container_width=use_container_width)
+
+
+main()

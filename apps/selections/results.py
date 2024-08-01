@@ -2,11 +2,10 @@ import datetime as dt
 import streamlit as st
 import pandas as pd
 
-from config import Config
 from utils import add_timestamp, compare_dataframes, create_data, read_data, update_data
 
 
-def Results(config: Config, database_lock: bool, season: str) -> None:
+def main(database_lock: bool = False, season: str = "2024") -> None:
     """Record game and players results.
 
     Args:
@@ -606,3 +605,6 @@ def create_player_selections(df: pd.DataFrame, lock: bool = True) -> None:
                 row["played"],
             ),
         )
+
+
+main()

@@ -14,7 +14,7 @@ venv:
 
 ## Install Python requirements for running
 requirements:
-	( $(ACTIVATE_VENV) && pip3 install -r requirements.txt )
+	( $(ACTIVATE_VENV) && pip3 install -r requirements.txt --upgrade-strategy eager)
 
 
 ## Python lint and formatting checks

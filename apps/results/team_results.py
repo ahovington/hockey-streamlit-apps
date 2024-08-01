@@ -1,11 +1,11 @@
 import pandas as pd
 import streamlit as st
 
-from config import Config
+from config import config
 from utils import read_data, select_box_query, clean_query_params
 
 
-def TeamResults(config: Config) -> None:
+def main() -> None:
     """Display game results"""
     clean_query_params(["Application", "Page", "Season"])
 
@@ -207,3 +207,6 @@ def team_results_data(season: str) -> pd.DataFrame:
     )
 
     return df
+
+
+main()

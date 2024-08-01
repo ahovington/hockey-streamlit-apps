@@ -2,11 +2,10 @@ import streamlit as st
 import datetime as dt
 import pandas as pd
 
-from config import Config
 from utils import read_data, financial_string_formatting
 
 
-def ClubFeesOustanding(config: Config) -> None:
+def main() -> None:
     """Summarise outstanding payments.
 
     Retuns: None
@@ -184,3 +183,6 @@ def largest_over_due_debitors() -> pd.DataFrame:
             total_amount_due desc
     """
     )
+
+
+main()

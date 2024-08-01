@@ -1,6 +1,6 @@
 import streamlit as st
 
-from config import Config
+from config import config
 from utils import clean_query_params
 from auth import auth, login, register_user
 from .documentation import Documentation
@@ -14,7 +14,7 @@ apps = {
 }
 
 
-def App(config: Config):
+def App():
     clean_query_params(["Application"])
     with st.sidebar:
         config.app.seasons.sort(reverse=True)
@@ -23,7 +23,7 @@ def App(config: Config):
         season = st.selectbox("Season", config.app.seasons)
 
     col1, col2 = st.columns([3, 7])
-    col1.image(config.app.west_logo_url)
+    col1.image(config.app.club_logo)
     col2.title("West Hockey Newcastle Registrations")
 
     authenticator = auth(["admin", "committee_member"])

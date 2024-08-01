@@ -1,7 +1,7 @@
 import streamlit as st
 
 
-def Documentation(*args):
+def Documentation():
     """
     Write the documentation for the application.
     """
