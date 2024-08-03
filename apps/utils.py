@@ -11,6 +11,8 @@ import pandas as pd
 from sqlalchemy import Engine, create_engine, text
 import streamlit as st
 
+from pages import login_page, login_create_login
+
 
 load_dotenv(dotenv_path=Path(".env"))
 
@@ -53,7 +55,20 @@ def auth_validation(func):
     def wrapper():
         if st.session_state.get("authentication_status", False):
             return func()
-        st.warning("Login to access this page")
+        _help = "Users need to pre preauthorised before they can create a login.\n\
+                Contact the Administrator to be added to the authorised users list."
+        st.page_link(
+            login_page,
+            icon=":material/key:",
+            label="Login to access this page",
+            help=_help,
+        )
+        st.page_link(
+            login_create_login,
+            icon=":material/key:",
+            label="Or create a login",
+            help=_help,
+        )
         return
 
     return wrapper
