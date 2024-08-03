@@ -5,7 +5,7 @@ import pandas as pd
 from utils import read_data, calculate_date_interval
 
 
-def selections_input_data(season: str, team_round: str, team: str):
+def selections_input_data(season: str, team_round: str, team: str) -> pd.DataFrame:
     """Extact the selections data for the team and round.
 
     Args:

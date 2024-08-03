@@ -1,11 +1,13 @@
+import pandas as pd
+
 from utils import read_data
 
 
-def team_name_data(season: str):
+def team_name_data(season: str) -> pd.DataFrame:
     return read_data(f"""select distinct team from teams where season = '{season}'""")
 
 
-def team_id_data(season: str, team: str, grade: str):
+def team_id_data(season: str, team: str, grade: str) -> pd.DataFrame:
     return read_data(
         f"""select id from teams where season = '{season}' and team = '{team}' and grade = '{grade}'"""
     ).iloc[0, 0]

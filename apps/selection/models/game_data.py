@@ -93,7 +93,9 @@ def game_data(
     ]
 
 
-def game_selection_data(season: str, date_end: dt.datetime, date_inteval: int = 6):
+def game_selection_data(
+    season: str, date_end: dt.datetime, date_inteval: int = 6
+) -> pd.DataFrame:
     """Extact the game data for the week.
 
     Args:
@@ -147,7 +149,7 @@ def game_selection_data(season: str, date_end: dt.datetime, date_inteval: int = 
     return df[["round", "team_name", "opposition", "game_time", "players_selected"]]
 
 
-def last_game_date(season: str):
+def last_game_date(season: str) -> pd.DataFrame:
     read_data(
         f"""
         select max(start_ts) + INTERVAL '1 days' as max_ts
