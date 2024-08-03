@@ -1,6 +1,8 @@
 import os
 import string
 import random
+from dotenv import load_dotenv
+from pathlib import Path
 from dataclasses import dataclass
 from urllib.parse import quote_plus
 from typing import Any
@@ -10,6 +12,9 @@ from sqlalchemy import Engine, create_engine, text
 import streamlit as st
 
 
+load_dotenv(dotenv_path=Path(".env"))
+
+
 @dataclass
 class Database:
     db_host: str
@@ -17,6 +22,7 @@ class Database:
     db_password: str
     db_user: str
 
+    @property
     def db_url(self) -> str:
         """Generate the url of the database.
 
@@ -25,26 +31,22 @@ class Database:
         """
         return f"""postgresql://{ self.db_user }:{ quote_plus(self.db_password) }@{ self.db_host}/{ self.db_name }"""
 
+    @property
     def create_db_engine(self) -> Engine:
         """Create database engine
 
         Returns:
             Engine: Database engine.
         """
-        return create_engine(self.db_url())
+        return create_engine(self.db_url)
 
 
 database = Database(
-    db_host=os.getenv(
-        "DB_HOST", "dpg-cm5o187qd2ns73eplb8g-a.singapore-postgres.render.com"
-    ),
-    db_name=os.getenv("DB_NAME", "hockey_services"),
-    db_password=os.getenv("DB_PASSWORD", ""),
-    db_user=os.getenv("DB_USER", "ahovington"),
+    db_host=os.getenv("DB_HOST"),
+    db_name=os.getenv("DB_NAME"),
+    db_password=os.getenv("DB_PASSWORD"),
+    db_user=os.getenv("DB_USER"),
 )
-
-
-engine = create_engine(database.db_url())
 
 
 def auth_validation(func):
@@ -84,7 +86,7 @@ def read_data(sql_statement: str) -> pd.DataFrame:
         pd.DataFrame: A pandas dataframe containing the results.
     """
     try:
-        with engine.connect() as session:
+        with database.create_db_engine.connect() as session:
             return pd.read_sql_query(sql_statement, session)
     finally:
         session.close()
@@ -114,7 +116,7 @@ def create_data(
         )
         return
     try:
-        with engine.connect() as session:
+        with database.create_db_engine.connect() as session:
             # Update a record
             sql = f"""INSERT INTO { table } ({', '.join(columns) }) VALUES { values }"""
             session.execute(text(sql))
@@ -159,7 +161,7 @@ def update_data(
         sql = f"""UPDATE { table } SET { column } = { value }, update_ts = '{ add_timestamp() }' WHERE id = '{ row_id }'"""
         if value_string_type:
             sql = f"""UPDATE { table } SET { column } = '{ value }', update_ts = '{ add_timestamp() }' WHERE id = '{ row_id }'"""
-        with engine.connect() as session:
+        with database.create_db_engine.connect() as session:
             # Update a record
             session.execute(text(sql))
             # Commit changes
