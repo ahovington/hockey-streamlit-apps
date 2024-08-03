@@ -18,9 +18,9 @@ requirements:
 
 
 ## Python lint and formatting checks
-check-python:
+check:
 	( $(ACTIVATE_VENV) && black --check $(APP) && pylint $(APP) )
-.PHONY: check-python
+.PHONY: check
 
 
 ## Install Python requirements for running and testing
@@ -30,4 +30,4 @@ requirements-test: requirements
 
 run:
 	($(ACTIVATE_VENV) && streamlit run apps/app.py)
-.PHONY: run-app
+.PHONY: run
