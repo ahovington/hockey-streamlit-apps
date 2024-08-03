@@ -246,20 +246,22 @@ def financial_string_formatting(input: Any):
 def select_box_query(
     name: str, options: list[str], location: st.columns, placeholder: str = ""
 ):
+    # TODO: reimplement query params
     page_index = None if placeholder else 0
-    query_param = st.query_params.get(name)
-    if query_param and query_param in options:
-        page_index = options.index(query_param)
+    # query_param = st.query_params.get(name)
+    # if query_param and query_param in options:
+    #     page_index = options.index(query_param)
     selection = location.selectbox(
         f"Select { name }", options, index=page_index, placeholder=placeholder
     )
-    st.query_params[name] = selection
-    if not selection:
-        del st.query_params[name]
+    # st.query_params[name] = selection
+    # if not selection:
+    #     del st.query_params[name]
     return selection
 
 
 def clean_query_params(filters: list[str]):
+    # TODO: reimplement query params
     params = st.query_params.to_dict()
     for param in params:
         if param in filters:
