@@ -2,7 +2,8 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-from utils import auth_validation, compare_dataframes, read_data, update_data
+from utils import auth_validation, compare_dataframes, update_data
+from registration.models import team_data, player_data
 
 
 # TODO: Need to remove these args and pass through the config
@@ -67,35 +68,6 @@ def main(database_lock: bool = False, season: str = "2024") -> None:
         player = player_data(season)
 
 
-def team_data(season: str) -> pd.DataFrame:
-    """Extact the teams for the current season.
-
-    Args:
-        season (str): The hockey season, usually the calendar year.
-
-    Retuns:
-        pd.DataFrame: The results of the query.
-    """
-    return read_data(
-        f"""
-        select
-            id as team_id,
-            grade,
-            team,
-            manager,
-            manager_mobile,
-            team || ' - ' || grade as full_team_name,
-            team_order
-        from teams
-        where
-            season = '{ season }'
-        order by
-            team_order,
-            grade
-    """
-    )
-
-
 def input_team_table(df: pd.DataFrame) -> pd.DataFrame:
     """Update the team data.
 
@@ -145,36 +117,6 @@ def update_team_data(df: pd.DataFrame, lock: bool = True) -> None:
             value_string_type=True,
         )
         update_data("teams", "team_order", row["team_id"], row["team_order"])
-
-
-def player_data(season: str) -> pd.DataFrame:
-    """Extact the registered players for the current season.
-
-    Args:
-        season (str): The hockey season, usually the calendar year.
-
-    Retuns:
-        pd.DataFrame: The results of the query.
-    """
-    return read_data(
-        f"""
-        select
-            r.id as registration_id,
-            p.full_name as players_name,
-            r.team,
-            r.grade,
-            t.team_order
-        from players as p
-        inner join registrations as r
-        on p.id = r.player_id
-        left join teams as t
-        on t.id = r.team_id
-        where
-            r.season = '{ season }'
-        order by
-            r.team
-    """
-    )
 
 
 def input_player_team_table(df: pd.DataFrame, team_names: list[str]) -> pd.DataFrame:

@@ -2,12 +2,12 @@ import pandas as pd
 import streamlit as st
 
 from config import config
-from utils import read_data, select_box_query, clean_query_params
+from utils import select_box_query
+from result.models import team_results_data
 
 
 def main() -> None:
     """Display game results"""
-    clean_query_params(["Application", "Page", "Season"])
 
     _, col2, _, _, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     season = select_box_query("Season", config.app.seasons, col2, "Select season...")
@@ -136,77 +136,6 @@ def team_detail_layout(
         """,
         unsafe_allow_html=True,
     )
-
-
-def team_results_data(season: str) -> pd.DataFrame:
-    """Extact the outstanding club fees.
-
-    Args:
-        season (str): The hockey season, usually the calendar year.
-        team (str, optional): The teams name.
-        game_round (str, optional): The round of the season.
-
-    Retuns:
-        pd.DataFrame: The results of the query.
-    """
-    df = read_data(
-        # TODO: filter out upcoming games
-        f"""
-        with game_data as (
-            select
-                g.id,
-                t.team_order,
-                t.team,
-                t.grade,
-                t.team || ' - ' || t.grade as team_name,
-                g.season,
-                g.goals_for,
-                g.goals_against,
-                g.goals_for > g.goals_against as win,
-                g.goals_for < g.goals_against as loss,
-                g.goals_for = g.goals_against as draw
-            from games as g
-            left join teams as t
-            on g.team_id = t.id
-            where g.season = '{ season }'
-        )
-
-        select
-            team_order,
-            team,
-            grade,
-            team_name,
-            goals_for,
-            goals_against,
-            1 as games_played,
-            win,
-            loss,
-            draw
-        from game_data as gd
-        """
-    )
-    df.loc[:, "goals_for"] = (
-        df.loc[:, "goals_for"].replace("", 0).astype(float).astype(int)
-    )
-    df.loc[:, "goals_against"] = (
-        df.loc[:, "goals_against"].replace("", 0).astype(float).astype(int)
-    )
-    df = (
-        df.groupby(["team_order", "team", "grade", "team_name"])
-        .agg(
-            {
-                "games_played": "sum",
-                "goals_for": "sum",
-                "goals_against": "sum",
-                "win": "sum",
-                "loss": "sum",
-                "draw": "sum",
-            }
-        )
-        .reset_index()
-    )
-
-    return df
 
 
 main()

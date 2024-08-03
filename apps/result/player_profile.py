@@ -1,19 +1,17 @@
 import streamlit as st
 
 from config import config
-from utils import read_data, select_box_query, clean_query_params
+from utils import select_box_query
+from result.models import player_data, player_names
 
 
 def main() -> None:
     """Display player results"""
-    # clean_query_params(["Application", "Page", "Player", "Season"])
 
     _, col2, col3, col4, _ = st.columns([3, 2, 2, 2, 1], gap="small")
     player_name = select_box_query(
         "Player",
-        read_data("select full_name as player from players order by full_name")[
-            "player"
-        ].values.tolist(),
+        player_names()["player"].values.tolist(),
         col2,
         "Select player...",
     )
@@ -70,53 +68,6 @@ def main() -> None:
     ]
     player_table.loc[:, "Goals"] = 0
     st.dataframe(player_table, hide_index=True, use_container_width=True)
-
-
-def player_data(player_name: str, season: str):
-    """The data for the player
-
-    Args:
-        player_name str: The name of the player.
-        season str: The hockey season.
-    """
-    return read_data(
-        f"""
-            select
-                p.id as player_id,
-                p.full_name as player,
-                g.season,
-                r.grade as player_graded,
-                t.grade as grade_played,
-                s.goal_keeper,
-                s.played,
-                count(*) as games_played
-            from players as p
-            left join registrations as r
-            on p.id = r.player_id
-            left join selections as s
-            on p.id = s.player_id
-            left join games as g
-            on s.game_id = g.id and
-                r.season = g.season
-            left join teams as t
-            on g.team_id = t.id
-            where
-                s.played = true and
-                p.full_name = '{ player_name }' and
-                r.season = '{ season }' and
-                g.season = '{ season }'
-            group by
-                p.id,
-                p.full_name,
-                g.season,
-                r.grade,
-                t.grade,
-                s.goal_keeper,
-                s.played
-            order by
-                p.id
-    """
-    )
 
 
 main()
