@@ -13,6 +13,7 @@ from utils import (
     update_data,
 )
 from selection.models import (
+    game_data,
     last_game_date,
     selections_input_data,
     selections_output_data,
