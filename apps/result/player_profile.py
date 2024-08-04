@@ -35,6 +35,7 @@ class Player:
 def main() -> None:
     """Display player results"""
 
+    # Display the filters
     col1, col2, _, _ = st.columns(
         [2, 2, 2, 2], gap="small", vertical_alignment="center"
     )
@@ -61,6 +62,7 @@ def main() -> None:
     player_id = players[players["player"] == player_name]["id"].values[0]
     st.subheader("", divider="green")
 
+    # Load player data
     df = player_data(player_id, season)
     if not df.shape[0]:
         st.warning(f"No games found for {player_name} in the {season} season")
@@ -83,6 +85,7 @@ def main() -> None:
 
     display_html_header(player.name, season, player.grade)
 
+    # Display the metrics
     col1, col2, col3, col4, col5 = st.columns(
         [1, 1, 1, 1, 1], gap="small", vertical_alignment="center"
     )
@@ -92,6 +95,8 @@ def main() -> None:
     col4.metric("Goals per game", player.goals_per_game)
     col5.metric("Cards", player.total_cards)
 
+    # Display the games played
+    st.subheader("Games played")
     player_table = df[
         [
             "team",
@@ -105,21 +110,20 @@ def main() -> None:
             "goals_against",
             "result",
         ]
-    ]
-
-    st.subheader("Games played")
-    player_table.columns = [
-        "Team",
-        "Grade",
-        "Round",
-        "Location",
-        "Opposition",
-        "Individual Goals",
-        "Individual Cards",
-        "Team Goals For",
-        "Team Goals Against",
-        "Result",
-    ]
+    ].rename(
+        columns={
+            "team": "Team",
+            "grade": "Grade",
+            "round": "Round",
+            "location_name": "Location",
+            "opposition": "Opposition",
+            "goals": "Individual Goals",
+            "cards": "Individual Cards",
+            "goals_for": "Team Goals For",
+            "goals_against": "Team Goals Against",
+            "result": "Result",
+        }
+    )
     st.dataframe(player_table, hide_index=True, use_container_width=True)
 
 
