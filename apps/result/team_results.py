@@ -7,7 +7,7 @@ from result.models import team_results_data
 
 
 @dataclass
-class Teams:
+class Team:
     name: str
     games_played: int
     wins: int
@@ -49,7 +49,7 @@ def main() -> None:
         return
 
     for _, row in team_results.iterrows():
-        team = Teams(
+        team = Team(
             name=row["team_name"],
             games_played=int(row["games_played"]),
             wins=int(row["win"]),
