@@ -1,9 +1,32 @@
-import pandas as pd
+from dataclasses import dataclass
 import streamlit as st
 
 from config import config
 from utils import select_box_query
 from result.models import team_results_data
+
+
+@dataclass
+class Teams:
+    name: str
+    games_played: int
+    wins: int
+    losses: int
+    draws: int
+    goals_for: int
+    goals_against: int
+
+    @property
+    def calculate_points(self) -> int:
+        return self.wins * 2 + self.draws
+
+    @property
+    def goal_difference(self) -> int:
+        return self.goals_for - self.goals_against
+
+    @property
+    def points_percentage(self) -> str:
+        return f"{ self.calculate_points / (self.games * 2) :.1%}"
 
 
 def main() -> None:
@@ -26,21 +49,30 @@ def main() -> None:
         return
 
     for _, row in team_results.iterrows():
+        team = Teams(
+            name=row["team_name"],
+            games_played=int(row["games_played"]),
+            wins=int(row["win"]),
+            losses=row["loss"],
+            draws=row["draw"],
+            goals_for=row["goals_for"],
+            goals_against=row["goals_against"],
+        )
         with st.container(border=True):
             team_layout(
-                row["team_name"],
-                row["games_played"],
-                row["win"],
-                row["loss"],
-                row["draw"],
-                (row["win"] * 2 + row["draw"]),
+                team.name,
+                team.games_played,
+                team.wins,
+                team.losses,
+                team.draws,
+                team.calculate_points,
             )
             with st.expander("More detail"):
                 team_detail_layout(
-                    row["goals_for"],
-                    row["goals_against"],
-                    (row["goals_for"] - row["goals_against"]),
-                    f"""{ (row["win"] * 2 + row["draw"]) / (row["games_played"] * 2) :.1%}""",
+                    team.goals_for,
+                    team.goals_against,
+                    team.goal_difference,
+                    team.points_percentage,
                 )
 
                 st.warning("Not fully implemented")
@@ -49,15 +81,6 @@ def main() -> None:
                 data = [
                     {"Name": "John Doe", "Goals": 15},
                     {"Name": "Jane Smith", "Goals": 12},
-                    # Add more rows as needed
-                ]
-                st.table(data)
-
-                st.write("Most Points")
-                # Data for the table (replace with your actual data)
-                data = [
-                    {"Name": "John Doe", "Points": 15},
-                    {"Name": "Jane Smith", "Points": 12},
                     # Add more rows as needed
                 ]
                 st.table(data)
