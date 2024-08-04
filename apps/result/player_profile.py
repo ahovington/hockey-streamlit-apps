@@ -148,8 +148,8 @@ def display_html_header(player_name: str, season: str, grade: str):
             }}
         </style>
             <img src= { "https://maxfieldhockey.com/wp-content/uploads/2019/02/PlayerProfileHeadshot_Default.jpg" } alt="Player Avatar">
-            <h1>{ player_name }</h1>
-            <p>{season} Season : Player Graded: { grade }</p>
+            <h1>{player_name}</h1>
+            <p>{season} Season : Player Graded: {grade}</p>
         </div>
         """
     )
