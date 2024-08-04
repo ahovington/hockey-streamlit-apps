@@ -16,7 +16,7 @@ def main() -> None:
         return
 
     st.subheader(
-        f"""West Team Results for { season }""",
+        f"""Results for { season }""",
         divider="green",
     )
 
@@ -73,31 +73,31 @@ def team_layout(
     title_size: int = 16,
     metric_size: int = 32,
 ):
-    return st.markdown(
+    return st.html(
         f"""
         <div style="text-align: center; line-height: 1.0;">
-            <p style="font-size: 18px;"><strong>{ team_name } Grade</strong></p>
+            <p style="font-size: 18px;"><strong>{team_name} Grade</strong></p>
         </div>
         <div style="display: flex; justify-content: space-around; align-items: center; line-height: 1.0;">
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Games</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ games_played }</strong></p>
+                <p><span style="font-size: {title_size}px;">Games</p>
+                <p><strong><span style="font-size: {metric_size}px;">{games_played}</strong></p>
             </div>
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Wins</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ wins }</strong></p>
+                <p><span style="font-size: {title_size}px;">Wins</p>
+                <p><strong><span style="font-size: {metric_size}px;">{wins}</strong></p>
             </div>
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Losses</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ losses }</strong></p>
+                <p><span style="font-size: {title_size}px;">Losses</p>
+                <p><strong><span style="font-size: {metric_size}px;">{losses}</strong></p>
             </div>
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Draws</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ draws }</strong></p>
+                <p><span style="font-size: {title_size}px;">Draws</p>
+                <p><strong><span style="font-size: {metric_size}px;">{draws}</strong></p>
             </div>
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Points</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ points }</strong></p>
+                <p><span style="font-size: {title_size}px;">Points</p>
+                <p><strong><span style="font-size: {metric_size}px;">{points}</strong></p>
             </div>
         </div>
         """,
@@ -113,24 +113,24 @@ def team_detail_layout(
     title_size=12,
     metric_size=24,
 ):
-    return st.markdown(
+    return st.html(
         f"""
         <div style="display: flex; justify-content: space-around; align-items: center; line-height: 1.0;">
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Goals for</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ goals_for }</strong></p>
+                <p><span style="font-size: {title_size}px;">Goals for</p>
+                <p><strong><span style="font-size: {metric_size}px;">{goals_for}</strong></p>
             </div>
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Goals against</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ goals_againt }</strong></p>
+                <p><span style="font-size: {title_size}px;">Goals against</p>
+                <p><strong><span style="font-size: {metric_size}px;">{goals_againt}</strong></p>
             </div>    
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Goal difference</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ goal_difference }</strong></p>
+                <p><span style="font-size: {title_size}px;">Goal difference</p>
+                <p><strong><span style="font-size: {metric_size}px;">{goal_difference}</strong></p>
             </div>
             <div style="text-align: center;">
-                <p><span style="font-size: { title_size }px;">Points percentage</p>
-                <p><strong><span style="font-size: { metric_size }px;">{ points_percentage }</strong></p>
+                <p><span style="font-size: {title_size}px;">Points percentage</p>
+                <p><strong><span style="font-size: {metric_size}px;">{points_percentage}</strong></p>
             </div>
         </div>
         """,
