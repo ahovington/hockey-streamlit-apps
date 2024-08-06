@@ -18,15 +18,13 @@ class Result(Enum):
 
 @dataclass
 class Game:
-    team: str
     round: str
     grade: str
     location: str
     field: str
     start_time: str
-    team_logo_url: str
+    team: str
     opposition_team: str
-    opposition_team_logo_url: str
     goals_for: int
     goals_against: int
 
@@ -39,6 +37,14 @@ class Game:
             result = Result.LOSS
         return result
 
+    @property
+    def team_logo_url(self):
+        return _club_logo_url(self.team)
+
+    @property
+    def opposition_team_logo_url(self):
+        return _club_logo_url(self.opposition_team)
+
     def to_dict(self):
         return {
             "team": self.team,
@@ -47,9 +53,7 @@ class Game:
             "location": self.location,
             "field": self.field,
             "start_time": self.start_time,
-            "team_logo_url": self.team_logo_url,
             "opposition_team": self.opposition_team,
-            "opposition_team_logo_url": self.opposition_team_logo_url,
             "goals_for": self.goals_for,
             "goals_against": self.goals_against,
             "result": self.result.name,
@@ -108,9 +112,7 @@ def load_game_results(season: str, team: str, game_round: str) -> Optional[list[
                 field=game["field"],
                 start_time=game["start_ts"],
                 team=game["team"],
-                team_logo_url=_club_logo_url(game["team"]),
                 opposition_team=game["opposition"],
-                opposition_team_logo_url=_club_logo_url(game["opposition"]),
                 goals_for=game["goals_for"],
                 goals_against=game["goals_against"],
             )
@@ -263,7 +265,6 @@ def results_table(games: list[Game]) -> None:
     """
     _results = pd.DataFrame.from_records(
         [game.to_dict() for game in games],
-        exclude=["team_logo_url", "opposition_team_logo_url"],
     )
     st.dataframe(_results, hide_index=True, use_container_width=True)
 
