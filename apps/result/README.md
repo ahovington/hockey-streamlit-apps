@@ -1,7 +1,7 @@
 # Results App
 
 ## App to do list
-- Player profile
 - Club statistics
-- Team statistics
-- Player statistics
+- DONE [x]: Player profile
+- DONE [x]: Team statistics
+- DONE [x]: Player statistics

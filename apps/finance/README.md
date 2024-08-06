@@ -1,4 +1,4 @@
 # Finance App
 
 ## App to do list
-- Summarise who has paid / who hasn't
+- DONE [x]: Summarise who has paid / who hasn't

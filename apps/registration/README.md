@@ -1,3 +1,3 @@
 # Registrations App
 
-Record who has registered and assign players to a grade.
+- DONE [x]: Record who has registered and assign players to a grade.
