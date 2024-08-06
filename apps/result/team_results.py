@@ -51,6 +51,7 @@ def main() -> None:
         st.warning(f"No results found for season { season }")
         return
 
+    detail = st.toggle("Add additional statistics")
     for team in team_results:
         with st.container(border=True):
             team_layout(
@@ -61,7 +62,8 @@ def main() -> None:
                 team.draws,
                 team.calculate_points,
             )
-            with st.expander("More detail"):
+            if detail:
+                st.divider()
                 team_detail_layout(
                     team.goals_for,
                     team.goals_against,
@@ -69,16 +71,16 @@ def main() -> None:
                     team.points_percentage,
                 )
 
-                # TODO: add in top scorers
-                # st.warning("Not fully implemented")
-                # st.write("Top Goal Scorers")
-                # # Data for the table (replace with your actual data)
-                # data = [
-                #     {"Name": "John Doe", "Goals": 15},
-                #     {"Name": "Jane Smith", "Goals": 12},
-                #     # Add more rows as needed
-                # ]
-                # st.table(data)
+            # TODO: add in top scorers
+            # st.warning("Not fully implemented")
+            # st.write("Top Goal Scorers")
+            # # Data for the table (replace with your actual data)
+            # data = [
+            #     {"Name": "John Doe", "Goals": 15},
+            #     {"Name": "Jane Smith", "Goals": 12},
+            #     # Add more rows as needed
+            # ]
+            # st.table(data)
 
 
 def load_team_results(season: str) -> Optional[list[Team]]:
