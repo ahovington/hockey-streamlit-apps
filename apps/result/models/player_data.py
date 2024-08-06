@@ -37,11 +37,6 @@ def player_data(player_id: str, season: str) -> pd.DataFrame:
             g.start_ts,
             g.goals_for,
             g.goals_against,
-            case
-                when g.goals_for > g.goals_against then 'win'
-                when g.goals_for < g.goals_against then 'loss'
-                when g.goals_for = g.goals_against then 'draw'
-            end as result,
             coalesce(re.goals, 0) as goals,
             coalesce(re.green_card, 0) as green_card,
             coalesce(re.yellow_card, 0) as yellow_card,

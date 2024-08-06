@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+from enum import Enum, auto
+from typing import Optional
+import pandas as pd
 import streamlit as st
 
 from config import config
@@ -6,16 +9,62 @@ from utils import select_box_query
 from result.models import player_data, player_names
 
 
+class Result(Enum):
+    WIN = auto()
+    DRAW = auto()
+    LOSS = auto()
+
+
+@dataclass
+class Game:
+    team: str
+    grade: str
+    round: str
+    location: str
+    opposition: str
+    individual_goals: int
+    individual_cards: int
+    team_goals_for: int
+    team_goals_against: int
+
+    @property
+    def result(self) -> Result:
+        result = Result.WIN
+        if self.team_goals_for == self.team_goals_against:
+            result = Result.DRAW
+        if self.team_goals_for < self.team_goals_against:
+            result = Result.LOSS
+        return result
+
+    def to_dict(self):
+        return {
+            "Team": self.team,
+            "Grade": self.grade,
+            "Round": self.round,
+            "Location": self.location,
+            "Opposition": self.opposition,
+            "Individual Goals": self.individual_goals,
+            "Individual Cards": self.individual_cards,
+            "Team Goals For": self.team_goals_for,
+            "Team Goals Against": self.team_goals_against,
+            "Result": self.result.name,
+        }
+
+
 @dataclass
 class Player:
     name: str
     grade: str
     games_played: int
-    games_won: int
     goals: int
     green_cards: int
     yellow_cards: int
     red_cards: int
+    games: list[Game]
+
+    @property
+    def games_won(self) -> int:
+        return sum([1 for game in self.games if game.result == Result.WIN])
 
     @property
     def total_cards(self) -> int:
@@ -62,69 +111,49 @@ def main() -> None:
     player_id = players[players["player"] == player_name]["id"].values[0]
     st.subheader("", divider="green")
 
-    # Load player data
-    df = player_data(player_id, season)
-    if not df.shape[0]:
-        st.warning(f"No games found for {player_name} in the {season} season")
-        return
+    player_results = load_player_results(player_id, season)
 
-    player = Player(
-        name=player_name,
-        grade=df["player_graded"].unique()[0],
-        games_played=int(df.shape[0]),
-        games_won=df[df["result"] == "win"].shape[0],
-        goals=int(df["goals"].sum()),
-        green_cards=int(df["green_card"].sum()),
-        yellow_cards=int(df["yellow_card"].sum()),
-        red_cards=int(df["red_card"].sum()),
-    )
-
-    if not player.games_played:
+    if not player_results:
         st.warning(f"{ player_name } hasn't played any games in the { season } season.")
         return
 
-    display_html_header(player.name, season, player.grade)
+    display_html_header(player_results.name, season, player_results.grade)
 
-    # Display the metrics
-    col1, col2, col3, col4, col5 = st.columns(
-        [1, 1, 1, 1, 1], gap="small", vertical_alignment="center"
-    )
-    col1.metric("Games played", player.games_played)
-    col2.metric("Games won %", player.percent_games_won)
-    col3.metric("Goals", player.goals)
-    col4.metric("Goals per game", player.goals_per_game)
-    col5.metric("Cards", player.total_cards)
+    display_metrics(player_results)
 
-    # Display the games played
-    st.subheader("Games played")
-    player_table = df[
-        [
-            "team",
-            "grade",
-            "round",
-            "location_name",
-            "opposition",
-            "goals",
-            "cards",
-            "goals_for",
-            "goals_against",
-            "result",
+    display_games_table(player_results.games)
+
+
+def load_player_results(player_id: str, season: str) -> Optional[Player]:
+    players_games = player_data(player_id, season)
+    if not players_games.shape[0]:
+        st.warning(f"No games found for player in the {season} season")
+        return
+    games = []
+    for _, game in players_games.iterrows():
+        games += [
+            Game(
+                team=game["team"],
+                grade=game["grade"],
+                round=game["round"],
+                location=game["location_name"],
+                opposition=game["opposition"],
+                individual_goals=int(game["goals"]),
+                individual_cards=int(game["cards"]),
+                team_goals_for=int(game["goals_for"]),
+                team_goals_against=int(game["goals_against"]),
+            )
         ]
-    ].rename(
-        columns={
-            "team": "Team",
-            "grade": "Grade",
-            "round": "Round",
-            "location_name": "Location",
-            "opposition": "Opposition",
-            "goals": "Individual Goals",
-            "cards": "Individual Cards",
-            "goals_for": "Team Goals For",
-            "goals_against": "Team Goals Against",
-            "result": "Result",
-        }
+    return Player(
+        name=players_games["player"].unique()[0],
+        grade=players_games["player_graded"].unique()[0],
+        games_played=int(players_games.shape[0]),
+        goals=int(players_games["goals"].sum()),
+        green_cards=int(players_games["green_card"].sum()),
+        yellow_cards=int(players_games["yellow_card"].sum()),
+        red_cards=int(players_games["red_card"].sum()),
+        games=games,
     )
-    st.dataframe(player_table, hide_index=True, use_container_width=True)
 
 
 def display_html_header(player_name: str, season: str, grade: str):
@@ -153,6 +182,23 @@ def display_html_header(player_name: str, season: str, grade: str):
         </div>
         """
     )
+
+
+def display_metrics(player: Player) -> None:
+    col1, col2, col3, col4, col5 = st.columns(
+        [1, 1, 1, 1, 1], gap="small", vertical_alignment="center"
+    )
+    col1.metric("Games played", player.games_played)
+    col2.metric("Games won %", player.percent_games_won)
+    col3.metric("Goals", player.goals)
+    col4.metric("Goals per game", player.goals_per_game)
+    col5.metric("Cards", player.total_cards)
+
+
+def display_games_table(games: list[Game]) -> None:
+    st.subheader("Games played")
+    _results = pd.DataFrame.from_records([game.to_dict() for game in games])
+    st.dataframe(_results, hide_index=True, use_container_width=True)
 
 
 main()
