@@ -1,9 +1,59 @@
 from dataclasses import dataclass
+from typing import Optional
 import streamlit as st
 
 from config import config
 from utils import select_box_query
 from result.models import team_results_data
+
+
+def main() -> None:
+    """Display game results"""
+
+    col1, _ = st.columns([2, 6], gap="small", vertical_alignment="center")
+    season = select_box_query("Season", config.app.seasons[::-1], col1)
+    if not season:
+        st.warning("Pick a season from dropdown.")
+        return
+
+    st.subheader(
+        f"""Results for { season }""",
+        divider="green",
+    )
+
+    team_results = load_team_results(season)
+    if not team_results:
+        st.warning(f"No results found for season { season }")
+        return
+
+    for team in team_results:
+        with st.container(border=True):
+            team_layout(
+                team.name,
+                team.games_played,
+                team.wins,
+                team.losses,
+                team.draws,
+                team.calculate_points,
+            )
+            with st.expander("More detail"):
+                team_detail_layout(
+                    team.goals_for,
+                    team.goals_against,
+                    team.goal_difference,
+                    team.points_percentage,
+                )
+
+                # TODO: add in top scorers
+                # st.warning("Not fully implemented")
+                # st.write("Top Goal Scorers")
+                # # Data for the table (replace with your actual data)
+                # data = [
+                #     {"Name": "John Doe", "Goals": 15},
+                #     {"Name": "Jane Smith", "Goals": 12},
+                #     # Add more rows as needed
+                # ]
+                # st.table(data)
 
 
 @dataclass
@@ -26,64 +76,31 @@ class Team:
 
     @property
     def points_percentage(self) -> str:
-        return f"{ self.calculate_points / (self.games * 2) :.1%}"
+        return f"{ self.calculate_points / (self.games_played * 2) :.1%}"
 
 
-def main() -> None:
-    """Display game results"""
-
-    _, col2, _, _, _ = st.columns([3, 2, 2, 2, 1], gap="small")
-    season = select_box_query("Season", config.app.seasons, col2, "Select season...")
-    if not season:
-        st.warning("Pick a season from dropdown.")
-        return
-
-    st.subheader(
-        f"""Results for { season }""",
-        divider="green",
-    )
-
+def load_team_results(season: str) -> Optional[list[Team]]:
     team_results = team_results_data(season)
     if not team_results.shape[0]:
-        st.warning(f"No results found for season { season }")
         return
-
+    teams = []
     for _, row in team_results.iterrows():
-        team = Team(
-            name=row["team_name"],
-            games_played=int(row["games_played"]),
-            wins=int(row["win"]),
-            losses=row["loss"],
-            draws=row["draw"],
-            goals_for=row["goals_for"],
-            goals_against=row["goals_against"],
-        )
-        with st.container(border=True):
-            team_layout(
-                team.name,
-                team.games_played,
-                team.wins,
-                team.losses,
-                team.draws,
-                team.calculate_points,
+        teams += [
+            Team(
+                name=row["team_name"],
+                games_played=int(row["games_played"]),
+                wins=int(row["win"]),
+                losses=row["loss"],
+                draws=row["draw"],
+                goals_for=row["goals_for"],
+                goals_against=row["goals_against"],
             )
-            with st.expander("More detail"):
-                team_detail_layout(
-                    team.goals_for,
-                    team.goals_against,
-                    team.goal_difference,
-                    team.points_percentage,
-                )
+        ]
+    return teams
 
-                st.warning("Not fully implemented")
-                st.write("Top Goal Scorers")
-                # Data for the table (replace with your actual data)
-                data = [
-                    {"Name": "John Doe", "Goals": 15},
-                    {"Name": "Jane Smith", "Goals": 12},
-                    # Add more rows as needed
-                ]
-                st.table(data)
+
+def display_team_results():
+    pass
 
 
 def team_layout(
@@ -123,8 +140,7 @@ def team_layout(
                 <p><strong><span style="font-size: {metric_size}px;">{points}</strong></p>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
 
@@ -156,8 +172,7 @@ def team_detail_layout(
                 <p><strong><span style="font-size: {metric_size}px;">{points_percentage}</strong></p>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
 
