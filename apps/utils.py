@@ -267,29 +267,3 @@ def clean_query_params(filters: list[str]):
         if param in filters:
             continue
         del st.query_params[param]
-
-
-def team_name_clean(team_name: str) -> str:
-    _team_name = team_name.upper()
-    if "WEST" in _team_name:
-        return "West"
-    if "UNI" in _team_name:
-        return "University"
-    if "TIGER" in _team_name:
-        return "Tigers"
-    if "SOUTH" in _team_name:
-        return "Souths"
-    if "UNI" in _team_name:
-        return "University"
-    if "PORT" in _team_name:
-        return "Port Stephens"
-    if "NORTH" in _team_name:
-        return "Norths"
-    if "MAITLAND" in _team_name:
-        return "Maitland"
-    if "GOSFORD" in _team_name:
-        return "Gosford"
-    if "CRUSADER" in _team_name:
-        return "Crusaders"
-    if "COLT" in _team_name:
-        return "Colts"
