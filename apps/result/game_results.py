@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum, auto
 from typing import Optional
 import pandas as pd
 import streamlit as st
@@ -7,6 +8,52 @@ from streamlit_calendar import calendar
 from utils import select_box_query
 from config import config
 from result.models import team_names, game_rounds, game_results_data
+
+
+class Result(Enum):
+    WIN = auto()
+    DRAW = auto()
+    LOSS = auto()
+
+
+@dataclass
+class Game:
+    team: str
+    round: str
+    grade: str
+    location: str
+    field: str
+    start_time: str
+    team_logo_url: str
+    opposition_team: str
+    opposition_team_logo_url: str
+    goals_for: int
+    goals_against: int
+
+    @property
+    def result(self) -> Result:
+        result = Result.WIN
+        if self.goals_for == self.goals_against:
+            result = Result.DRAW
+        if self.goals_for < self.goals_against:
+            result = Result.LOSS
+        return result
+
+    def to_dict(self):
+        return {
+            "team": self.team,
+            "round": self.round,
+            "grade": self.grade,
+            "location": self.location,
+            "field": self.field,
+            "start_time": self.start_time,
+            "team_logo_url": self.team_logo_url,
+            "opposition_team": self.opposition_team,
+            "opposition_team_logo_url": self.opposition_team_logo_url,
+            "goals_for": self.goals_for,
+            "goals_against": self.goals_against,
+            "result": self.result.name,
+        }
 
 
 def main() -> None:
@@ -47,38 +94,6 @@ def main() -> None:
     result_views.get(view, "Tiles")(game_results)
 
 
-@dataclass
-class Game:
-    team: str
-    round: str
-    grade: str
-    location: str
-    field: str
-    start_time: str
-    team_logo_url: str
-    opposition_team: str
-    opposition_team_logo_url: str
-    goals_for: int
-    goals_against: int
-    result: str
-
-    def to_dict(self):
-        return {
-            "team": self.team,
-            "round": self.round,
-            "grade": self.grade,
-            "location": self.location,
-            "field": self.field,
-            "start_time": self.start_time,
-            "team_logo_url": self.team_logo_url,
-            "opposition_team": self.opposition_team,
-            "opposition_team_logo_url": self.opposition_team_logo_url,
-            "goals_for": self.goals_for,
-            "goals_against": self.goals_against,
-            "result": self.result,
-        }
-
-
 def load_game_results(season: str, team: str, game_round: str) -> Optional[list[Game]]:
     game_results = game_results_data(season, team, game_round)
     if not game_results.shape[0]:
@@ -98,7 +113,6 @@ def load_game_results(season: str, team: str, game_round: str) -> Optional[list[
                 opposition_team_logo_url=_club_logo_url(game["opposition"]),
                 goals_for=game["goals_for"],
                 goals_against=game["goals_against"],
-                result=game["result"],
             )
         ]
     return games
@@ -194,7 +208,7 @@ def results_calendar(games: list[Game]):
     args:
         df (pd.DataFrame): Dataframe with the results data.
     """
-    result = {"win": "#359e23", "loss": "#a81919", "draw": "#ded70d"}
+    result = {Result.WIN: "#359e23", Result.LOSS: "#a81919", Result.DRAW: "#ded70d"}
 
     game_events = []
     for game in games:

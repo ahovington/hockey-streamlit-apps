@@ -6,6 +6,31 @@ from config import config
 from utils import select_box_query
 from result.models import team_results_data
 
+# TODO: Add games table
+
+
+@dataclass
+class Team:
+    name: str
+    games_played: int
+    wins: int
+    losses: int
+    draws: int
+    goals_for: int
+    goals_against: int
+
+    @property
+    def calculate_points(self) -> int:
+        return self.wins * 2 + self.draws
+
+    @property
+    def goal_difference(self) -> int:
+        return self.goals_for - self.goals_against
+
+    @property
+    def points_percentage(self) -> str:
+        return f"{ self.calculate_points / (self.games_played * 2) :.1%}"
+
 
 def main() -> None:
     """Display game results"""
@@ -54,29 +79,6 @@ def main() -> None:
                 #     # Add more rows as needed
                 # ]
                 # st.table(data)
-
-
-@dataclass
-class Team:
-    name: str
-    games_played: int
-    wins: int
-    losses: int
-    draws: int
-    goals_for: int
-    goals_against: int
-
-    @property
-    def calculate_points(self) -> int:
-        return self.wins * 2 + self.draws
-
-    @property
-    def goal_difference(self) -> int:
-        return self.goals_for - self.goals_against
-
-    @property
-    def points_percentage(self) -> str:
-        return f"{ self.calculate_points / (self.games_played * 2) :.1%}"
 
 
 def load_team_results(season: str) -> Optional[list[Team]]:
