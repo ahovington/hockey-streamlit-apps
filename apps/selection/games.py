@@ -1,23 +1,83 @@
+from dataclasses import dataclass
 import datetime as dt
 import streamlit as st
 import pandas as pd
 
+from config import config
 from utils import (
     auth_validation,
+    select_box_query,
     add_timestamp,
     compare_dataframes,
     create_data,
     update_data,
 )
+from selection.file_loader import FileUploader
 from selection.models import (
     game_data,
-    team_name_data,
+    team_data,
     team_id_data,
-    grade_name_data,
     location_name_data,
     location_id_data,
     field_name_data,
 )
+
+REQUIRED_COLUMNS = [
+    "SEASON",
+    "ROUND",
+    "TEAM",
+    "GRADE",
+    "LOCATION",
+    "FIELD",
+    "OPPOSITION",
+    "DATE",
+    "START_TIME",
+    "FINALS",
+]
+
+file_loader = FileUploader(REQUIRED_COLUMNS)
+
+
+@dataclass
+class EnterGame:
+    season: str
+    round: str
+    grade: str
+    location: str
+    field: str
+    date: dt.date
+    start_time: dt.datetime
+    team: str
+    opposition: str
+    finals: bool
+
+    @property
+    def id(self) -> str:
+        return f"{self.season}{self.grade}{self.team}{self.round}"
+
+    @property
+    def team_id(self) -> str:
+        id = team_id_data(self.season, self.team, self.grade)
+        if id.shape[0] > 1:
+            raise ValueError("Team id returned more than one result.")
+        return id.iloc[0, 0]
+
+    @property
+    def location_id(self) -> str:
+        id = location_id_data(self.location, self.field)
+        if id.shape[0] > 1:
+            raise ValueError("Location id returned more than one result.")
+        return id.iloc[0, 0]
+
+    @property
+    def start_ts(self) -> str:
+        return dt.datetime(
+            self.date.year,
+            self.date.month,
+            self.date.day,
+            self.start_time.hour,
+            self.start_time.minute,
+        ).strftime("%Y-%m-%d %H:%M:%S")
 
 
 @auth_validation
@@ -31,47 +91,128 @@ def main(database_lock: bool = False, season: str = "2024") -> None:
     Retuns: None
     """
     st.title("Games")
-    with st.expander("Enter game data", expanded=False):
-        id, team_id, location_id, round, finals, opposition, start_ts = enter_game_data(
-            season
-        )
-        if st.button("Submit"):
-            write_game_data(
-                id,
-                season,
-                team_id,
-                location_id,
-                round,
-                finals,
-                opposition,
-                start_ts,
-                database_lock,
+    col1, col2, col3, _ = st.columns(
+        [2, 2, 2, 2], gap="small", vertical_alignment="center"
+    )
+    season = select_box_query("Season", config.app.seasons, col1, "Select season...")
+    season = season if season else config.app.seasons[0]
+    game_round = col2.text_input("Select Round")
+    game_date = col3.date_input("Enter round date")
+    st.write(f"{season=}, {game_round=}, {game_date=}")
+
+    col1, col2, _, _ = st.columns(
+        [2, 2, 2, 2], gap="small", vertical_alignment="center"
+    )
+
+    game_data_csv = file_loader.upload_file()
+    # if game_data_csv is not None:
+    #     col_mapping_input = map_upload_game_data_schema(
+    #         game_data_csv.sample(1, random_state=42)
+    #     )
+    #     if col_mapping_input is not None:
+    #         col_mapping_output = transform_mapping_input(col_mapping_input)
+    #         if not validate_required_columns(col_mapping_output):
+    #             return
+    #         st.write(col_mapping_output)
+
+    #         st.write("Mapping data")
+
+    #         game_data_input = game_data_csv[list(col_mapping_output.keys())].rename(
+    #             columns=col_mapping_output
+    #         )
+    #         st.dataframe(game_data_input)
+
+    st.write("Or enter game data.")
+    game_data = format_game_data(
+        season,
+        game_round,
+        game_input_form(create_game_data(season, game_date)),
+    )
+
+    # if st.button("Write data to DB"):
+    #     for game in game_data:
+    #         write_game_data(
+    #             game.id,
+    #             game.season,
+    #             game.team_id,
+    #             game.location_id,
+    #             game.round,
+    #             game.finals,
+    #             game.opposition,
+    #             game.start_ts,
+    #             database_lock,
+    #         )
+
+    # with st.expander("Update game data", expanded=False):
+    #     update_game_data(database_lock, season)
+
+
+def create_game_data(season: str, game_date: dt.date) -> pd.DataFrame:
+    """Collect game data.
+
+    Args:
+        season (str): The season the game is part of.
+
+    Returns:
+        pd.DataFrame: A dataframe of the games this round.
+    """
+    games = []
+    for _, row in team_data(season).iterrows():
+        games += [
+            {
+                "TEAM": row["team"],
+                "GRADE": row["grade"],
+                "LOCATION": "Newcastle International Hockey Centre",
+                "FIELD": None,
+                "OPPOSITION": None,
+                "DATE": game_date,
+                "START_TIME": None,
+                "FINALS": False,
+            }
+        ]
+    return pd.DataFrame(games)
+
+
+def game_input_form(game_data: pd.DataFrame) -> pd.DataFrame:
+    entered_games_df = st.data_editor(
+        game_data,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "LOCATION": st.column_config.SelectboxColumn(
+                "Select Location", options=location_name_data().iloc[:, 0]
+            ),
+            "FIELD": st.column_config.SelectboxColumn(
+                "Select Field", options=field_name_data().iloc[:, 0]
+            ),
+            "OPPOSITION": st.column_config.TextColumn(),
+            "DATE": st.column_config.DateColumn(),
+            "START_TIME": st.column_config.TimeColumn(),
+        },
+    )
+    return entered_games_df
+
+
+def format_game_data(
+    season: str, round: str, game_data: pd.DataFrame
+) -> list[EnterGame]:
+    entered_games = []
+    for _, row in game_data.iterrows():
+        entered_games += [
+            EnterGame(
+                season=season,
+                round=round,
+                team=row["TEAM"],
+                grade=row["GRADE"],
+                location=row["LOCATION"],
+                field=row["FIELD"],
+                opposition=row["OPPOSITION"],
+                date=row["DATE"],
+                start_time=row["START_TIME"],
+                finals=row["FINALS"],
             )
-
-    with st.expander("Update game data", expanded=False):
-        update_game_data(database_lock, season)
-
-
-def enter_game_data(season: str):
-    # Enter data
-    team = st.selectbox("Team", team_name_data(season))
-    grade = st.selectbox("Grade", grade_name_data(season))
-    location = st.selectbox("Location", location_name_data())
-    field = st.selectbox("Field", field_name_data())
-    round = st.text_input("Round")
-    opposition = st.text_input("Opposition")
-    date = st.date_input("Game date")
-    start_time = st.time_input("Start time")
-    finals = st.selectbox("Finals", [False, True])
-
-    # Transform inputs
-    id = f"{season}{grade}{team}{round}"
-    team_id = team_id_data(season, team, grade)
-    location_id = location_id_data(location, field)
-    start_ts = dt.datetime(
-        date.year, date.month, date.day, start_time.hour, start_time.minute
-    ).strftime("%Y-%m-%d %H:%M:%S")
-    return id, team_id, location_id, round, finals, opposition, start_ts
+        ]
+    return entered_games
 
 
 def update_game_data(database_lock: bool, season: str):
@@ -94,7 +235,6 @@ def update_game_data(database_lock: bool, season: str):
     st.table(all_game_changes)
     if all_game_changes.shape[0]:
         update_game_results(all_game_changes, database_lock)
-        all_game_result = game_data(season)
 
 
 def input_all_game_results(df: pd.DataFrame) -> pd.DataFrame:
