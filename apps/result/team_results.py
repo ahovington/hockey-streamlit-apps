@@ -36,10 +36,8 @@ def main() -> None:
     """Display game results"""
 
     col1, _ = st.columns([2, 6], gap="small", vertical_alignment="center")
-    season = select_box_query("Season", config.app.seasons[::-1], col1)
-    if not season:
-        st.warning("Pick a season from dropdown.")
-        return
+    season = select_box_query("Season", config.app.seasons, col1, "Select season...")
+    season = season if season else config.app.seasons[0]
 
     st.subheader(
         f"""Results for { season }""",

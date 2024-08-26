@@ -67,8 +67,7 @@ def main() -> None:
     col1, col2, col3, _ = st.columns([2, 2, 2, 2], gap="small")
     config.app.seasons.sort(reverse=True)
     season = select_box_query("Season", config.app.seasons, col1, "Select season...")
-    if not season:
-        season = config.app.seasons[0]
+    season = season if season else config.app.seasons[0]
     team = select_box_query(
         "Team",
         team_names(season).loc[:, "team_name"].values.tolist(),

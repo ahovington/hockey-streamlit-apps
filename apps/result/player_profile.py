@@ -88,15 +88,8 @@ def main() -> None:
     col1, col2, _, _ = st.columns(
         [2, 2, 2, 2], gap="small", vertical_alignment="center"
     )
-    season = select_box_query(
-        "Season",
-        config.app.seasons,
-        col1,
-        "Select season...",
-    )
-    if not season:
-        # Seasons are stored in ascending order
-        season = config.app.seasons[::-1][0]
+    season = select_box_query("Season", config.app.seasons, col1, "Select season...")
+    season = season if season else config.app.seasons[0]
 
     players = player_names(season)
     player_name = select_box_query(
