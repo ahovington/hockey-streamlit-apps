@@ -8,7 +8,6 @@ results_game = st.Page(
     page=results_path / "game_results.py",
     title="Game Results",
     icon=":material/emoji_events:",
-    default=True,
 )
 results_team = st.Page(
     page=results_path / "team_results.py",
@@ -67,6 +66,7 @@ login_page = st.Page(
     page=login_path / "login.py",
     title="Login",
     icon=":material/key:",
+    default=True,
 )
 login_create_login = st.Page(
     page=login_path / "create_login.py",
