@@ -1,7 +1,13 @@
 import streamlit as st
 from pathlib import Path
 
-
+# Console
+console_path = Path("console")
+console = st.Page(
+    page=console_path / "console.py",
+    title="Invoicing console",
+    icon=":material/settings:",
+)
 # Result pages
 results_path = Path("result")
 results_game = st.Page(
@@ -81,6 +87,7 @@ login_reset_password = st.Page(
 
 
 login_pages: list[st.Page] = [login_page, login_create_login]
+console_pages: list[st.Page] = [console]
 reset_password_pages: list[st.Page] = [login_reset_password]
 result_pages: list[st.Page] = [results_game, results_team, results_player]
 selections_pages: list[st.Page] = [

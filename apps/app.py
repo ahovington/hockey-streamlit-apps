@@ -7,8 +7,7 @@ from pages import (
     reset_password_pages,
     finance_pages,
     registrations_pages,
-    result_pages,
-    selections_pages,
+    console_pages,
 )
 
 
@@ -23,8 +22,7 @@ if __name__ == "__main__":
     navigation: dict[str : list[st.Page]] = {}
     if not st.session_state.get("authentication_status", False):
         navigation["Login"] = login_pages
-    # navigation["Results"] = result_pages
-    # navigation["Selections"] = selections_pages
+    navigation["Console"] = console_pages
     navigation["Registrations"] = registrations_pages
     navigation["Finance"] = finance_pages
     if st.session_state.get("authentication_status", False):

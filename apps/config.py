@@ -1,10 +1,12 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import os
 
 
 @dataclass
 class Config:
     app: App
+    xero: Xero
 
     @dataclass
     class App:
@@ -14,6 +16,11 @@ class Config:
         logo_assets: dict[str, str]
         user_groups: list[str]
         database_lock: bool = True
+
+    @dataclass
+    class Xero:
+        client_id: str
+        client_secret: str = None
 
 
 ASSET_URL_STEM = "https://hockey-assets.s3.ap-southeast-1.amazonaws.com/"
@@ -38,5 +45,9 @@ config = Config(
         },
         user_groups=["admin", "committee_member", "collector"],
         database_lock=False,
+    ),
+    xero=Config.Xero(
+        client_id=os.getenv("XERO_CLIENT_ID", default=None),
+        client_secret=os.getenv("XERO_CLIENT_SECRET", default=None),
     ),
 )
