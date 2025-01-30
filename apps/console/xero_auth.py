@@ -8,6 +8,7 @@ import certifi
 
 from config import Config
 
+import streamlit as st
 
 XERO_API_URL = "https://api.xero.com/api.xro/2.0/"
 REQUEST_TIMEOUT = 30
@@ -99,12 +100,18 @@ class XeroOAuthToken:
             "redirect_uri": XeroOAuthToken.REDIRECT_URI,
         }
 
+        st.write(data)
+
         response = requests.post(
             XeroOAuthToken.TOKEN_ENDPOINT,
             data=data,
             verify=certifi.where(),
         )
-        return response.json()  # ["access_token"]
+
+        st.write(response.ok)
+        st.write(response.text)
+        st.write(response.json())
+        return response.json()["access_token"]
 
     def _get_tenant_id(self, token: str) -> str:
         tenants = requests.get(
