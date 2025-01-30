@@ -104,7 +104,7 @@ class XeroOAuthToken:
             data=data,
             verify=certifi.where(),
         )
-        return response.json()["access_token"]
+        return response.json()  # ["access_token"]
 
     def _get_tenant_id(self, token: str) -> str:
         tenants = requests.get(

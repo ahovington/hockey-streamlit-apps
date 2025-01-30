@@ -23,6 +23,7 @@ def main() -> None:
     )
 
     st.write(st.query_params)
+    st.write(st.query_params["code"])
     if "code" not in st.query_params:
         return
 
