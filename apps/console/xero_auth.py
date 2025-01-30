@@ -182,8 +182,8 @@ class XeroCreditNote:
 class XeroInvoice:
     BASE_ENDPOINT = XERO_API_URL + "Invoices"
 
-    def __init__(self, xero_oauth_token: XeroOAuthToken) -> None:
-        self.headers = xero_oauth_token.request_headers()
+    def __init__(self, xero_oauth_headers: dict) -> None:
+        self.headers = xero_oauth_headers
 
     def get(
         self, filters: Optional[list[str]] = None, resource: Optional[list[str]] = None
