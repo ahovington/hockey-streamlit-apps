@@ -102,16 +102,21 @@ class XeroOAuthToken:
 
         st.write(data)
 
-        response = requests.post(
-            XeroOAuthToken.TOKEN_ENDPOINT,
-            data=data,
+        # r = requests.post(
+        #     XeroOAuthToken.TOKEN_ENDPOINT,
+        #     data=data,
+        #     verify=certifi.where(),
+        # )
+        r = requests.post(
+            f"""https://identity.xero.com/connect/token authorization: Basic {data["authorization"]} Content-Type: application/x-www-form-urlencoded grant_type=authorization_code&code={auth_code}&redirect_uri={data["redirect_uri"]}""",
             verify=certifi.where(),
         )
-
-        st.write(response.ok)
-        st.write(response.text)
-        st.write(response.json())
-        return response.json()["access_token"]
+        if not r.ok:
+            raise Exception(
+                f"Retrieving the access token returned with error {r}: {r.reason}"
+            )
+        st.write(r.json())
+        # return r.json()["access_token"]
 
     def _get_tenant_id(self, token: str) -> str:
         tenants = requests.get(
