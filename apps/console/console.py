@@ -9,7 +9,7 @@ TENANT = "West Hockey Club"
 XeroToken = XeroOAuthToken(config, TENANT)
 
 
-@auth_validation
+# @auth_validation
 def main() -> None:
     """Refresh data between revolutionise, Xero and the database."""
     st.title("UNDER DEVELOPMENT: West Hockey Invoicing Console")
