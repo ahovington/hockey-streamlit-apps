@@ -7,7 +7,7 @@ console = st.Page(
     page=console_path / "console.py",
     title="Invoicing console",
     icon=":material/settings:",
-    default=True if st.session_state.get("authentication_status") else False,
+    default=True,
 )
 # Result pages
 results_path = Path("result")
@@ -73,7 +73,6 @@ login_page = st.Page(
     page=login_path / "login.py",
     title="Login",
     icon=":material/key:",
-    default=False if st.session_state.get("authentication_status") else True,
 )
 login_create_login = st.Page(
     page=login_path / "create_login.py",

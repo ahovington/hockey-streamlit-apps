@@ -27,8 +27,6 @@ if __name__ == "__main__":
     navigation["Finance"] = finance_pages
     if st.session_state.get("authentication_status", False):
         navigation["Reset Password"] = reset_password_pages
-
-    if st.session_state.get("authentication_status", False):
         logout()
 
     pg = st.navigation(navigation)
