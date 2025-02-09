@@ -91,24 +91,24 @@ class XeroOAuthToken:
         Take authentication code and return access token.
         """
         credentials = self.config.xero.client_id + ":" + self.config.xero.client_secret
-        data = {
+        header = {
             "authorization": "Basic "
             + base64.b64encode(credentials.encode("utf-8")).decode("utf-8"),
             "Content-Type": "application/x-www-form-urlencoded",
+        }
+        data = {
             "grant_type": "authorization_code",
             "code": auth_code,
             "redirect_uri": XeroOAuthToken.REDIRECT_URI,
         }
-
-        st.write(data)
-
         # r = requests.post(
         #     XeroOAuthToken.TOKEN_ENDPOINT,
+        #     header=header,
         #     data=data,
         #     verify=certifi.where(),
         # )
         r = requests.post(
-            f"""https://identity.xero.com/connect/token authorization: Basic {data["authorization"]} Content-Type: application/x-www-form-urlencoded grant_type=authorization_code&code={auth_code}&redirect_uri={data["redirect_uri"]}""",
+            f"""https://identity.xero.com/connect/token authorization: Basic {header["authorization"]} Content-Type: application/x-www-form-urlencoded grant_type=authorization_code&code={auth_code}&redirect_uri={data["redirect_uri"]}""",
             verify=certifi.where(),
         )
         if not r.ok:

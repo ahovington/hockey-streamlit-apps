@@ -7,7 +7,6 @@ console = st.Page(
     page=console_path / "console.py",
     title="Invoicing console",
     icon=":material/settings:",
-    default=True,
 )
 # Result pages
 results_path = Path("result")
@@ -66,6 +65,7 @@ finance_outstanding = st.Page(
     page=finance_path / "club_fees_outstanding.py",
     title="Fees Outstanding",
     icon=":material/bar_chart:",
+    default=True,
 )
 # Login pages
 login_path = Path("login")

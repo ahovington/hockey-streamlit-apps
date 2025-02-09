@@ -22,7 +22,6 @@ if __name__ == "__main__":
     navigation: dict[str : list[st.Page]] = {}
     if not st.session_state.get("authentication_status", False):
         navigation["Login"] = login_pages
-    navigation["Console"] = console_pages
     navigation["Registrations"] = registrations_pages
     navigation["Finance"] = finance_pages
     if st.session_state.get("authentication_status", False):
