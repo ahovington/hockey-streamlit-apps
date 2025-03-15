@@ -28,7 +28,7 @@ ASSET_URL_STEM = "https://hockey-assets.s3.ap-southeast-1.amazonaws.com/"
 
 config = Config(
     app=Config.App(
-        seasons=["2023", "2024"],
+        seasons=["2023", "2024", "2025"],
         club_name="West",
         club_logo=f"{ ASSET_URL_STEM }wests.png",
         logo_assets={
