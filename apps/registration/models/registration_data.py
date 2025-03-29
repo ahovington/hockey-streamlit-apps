@@ -11,41 +11,11 @@ def registration_count() -> pd.DataFrame:
     """
     return read_data(
         f"""
-            with first_game_dates as (
-                select
-                    season,
-                    date(min(start_ts)) as first_game_date
-                from games
-                group by
-                    season
-            ),
-
-            registration_dates as (
-                select
-                    id,
-                    season,
-                    registered_date::date as registered_date
-                from registrations
-            ),
-
-            days_before_first_game as (
-                select
-                    season,
-                    first_game_date,
-                    registered_date,
-                    registered_date::date - first_game_date::date as days_before_first_game
-                from registration_dates
-                inner join first_game_dates
-                using(season)
-            ),
-
-            registration_count as (
+            with registration_count as (
                 select
                     season,
                     count(*) as total_registrations
-                from days_before_first_game
-                where
-                    days_before_first_game <= 0
+                from registrations
                 group by
                     season
             )
@@ -64,16 +34,7 @@ def registration_dates() -> pd.DataFrame:
     """
     return read_data(
         f"""
-            with first_game_dates as (
-                select
-                    season,
-                    date(min(start_ts)) as first_game_date
-                from games
-                group by
-                    season
-            ),
-
-            registration_dates as (
+            with registration_dates as (
                 select
                     id,
                     season,
@@ -87,16 +48,18 @@ def registration_dates() -> pd.DataFrame:
                     id,
                     season,
                     team,
-                    first_game_date,
-                    registered_date,
-                    registered_date::date - first_game_date::date as days_before_first_game
+                    -- Set the first game date as a constant each year
+                    MAKE_DATE(
+                        season::integer, 3, 31
+                    ) as first_game_date,
+                    registered_date
                 from registration_dates
-                inner join first_game_dates
-                using(season)
             )
 
-            select *
+            select
+                *,
+                registered_date::date - first_game_date::date as days_before_end_of_march
             from days_before_first_game
-            where days_before_first_game <= 0
+            where registered_date::date - first_game_date::date <= 0
     """
     )

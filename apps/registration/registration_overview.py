@@ -13,6 +13,7 @@ def main() -> None:
     rego_dates = registration_dates()
 
     # registration count
+    st.subheader("Count of registered players by season.")
     get_bar_chart(
         rego_counts,
         "season",
@@ -21,30 +22,38 @@ def main() -> None:
     )
 
     # Average days players registered pre season
+    st.subheader("Average registration, days before end of March")
+    st.write(
+        "Shows the average number of days the average player registrated pre 31st March"
+    )
     avg_days_pre_season = (
         rego_dates.groupby("season")
-        .agg({"days_before_first_game": "mean"})
+        .agg({"days_before_end_of_march": "mean"})
         .reset_index()
     )
-    avg_days_pre_season.loc[:, "days_before_first_game"] = abs(
-        avg_days_pre_season.loc[:, "days_before_first_game"]
+    avg_days_pre_season.loc[:, "days_before_end_of_march"] = abs(
+        avg_days_pre_season.loc[:, "days_before_end_of_march"]
     )
     get_bar_chart(
         avg_days_pre_season,
         "season",
-        "days_before_first_game",
+        "days_before_end_of_march",
         use_container_width=True,
     )
 
     # registrations pre season curves
+    st.subheader("Registration curve by year")
+    st.write("Shows how many days pre 31st March registrations are happening")
     pre_season_rego_curve_by_season = rego_curve_data(rego_dates, rego_counts)
     get_line_chart(
         pre_season_rego_curve_by_season,
-        "days_before_first_game",
+        "days_before_end_of_march",
         "cummlative_registrations_percent",
         "season",
     )
 
+    st.subheader("Registration curve by team")
+    st.write("Shows which team are the first to register, pre 31st March")
     config.app.seasons.sort(reverse=True)
     season = st.selectbox(
         "Season", config.app.seasons, index=0, placeholder="Select season..."
@@ -52,12 +61,15 @@ def main() -> None:
     pre_season_rego_curve_by_team = rego_curve_data(
         rego_dates[rego_dates["season"] == season], rego_counts, groupby_team=True
     )
-    get_line_chart(
-        pre_season_rego_curve_by_team,
-        "days_before_first_game",
-        "cummlative_registrations_percent",
-        "team",
-    )
+    if pre_season_rego_curve_by_team.shape[0]:
+        get_line_chart(
+            pre_season_rego_curve_by_team,
+            "days_before_end_of_march",
+            "cummlative_registrations_percent",
+            "team",
+        )
+    else:
+        st.warning(f"No team data found for {season}")
 
 
 def rego_curve_data(
@@ -69,13 +81,13 @@ def rego_curve_data(
         rego_dates (pd.DataFrame): Dataframe containing the registration dates data.
         rego_counts (pd.DataFrame): Dataframe containing the registration counts data.
     """
-    by_group = ["season", "days_before_first_game"]
+    by_group = ["season", "days_before_end_of_march"]
     if groupby_team:
         by_group += ["team"]
     pre_season_rego_curve = rego_dates.groupby(by_group)["id"].count().reset_index()
     pre_season_rego_curve = pre_season_rego_curve.merge(
         rego_counts, on="season", how="inner"
-    ).sort_values("days_before_first_game")
+    ).sort_values("days_before_end_of_march")
     pre_season_rego_curve.loc[:, "registrations_percent"] = (
         pre_season_rego_curve["id"] / pre_season_rego_curve["total_registrations"]
     )
@@ -113,7 +125,7 @@ def get_line_chart(
         .encode(
             x=date_col,
             y=y_col,
-            color=alt.Color(by_group, scale={"range": ["#008000", "#2AAA8A"]}),
+            color=alt.Color(by_group),
         )
     )
 
